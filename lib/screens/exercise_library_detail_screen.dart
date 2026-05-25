@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../db/database_helper.dart';
 import '../models/exercise.dart';
 import '../managers/translation_manager.dart';
+import '../managers/exercise_translator.dart';
 
 import 'exercise_detail_screen.dart';
 
@@ -23,7 +24,8 @@ class ExerciseLibraryDetailScreen extends StatelessWidget {
     final tm = TranslationManager.instance;
     final isPt = tm.currentLanguage == 'pt';
 
-    final String name = exerciseData['name'] ?? '';
+    final String rawName = exerciseData['name'] ?? '';
+    final String translatedName = ExerciseTranslator.translateName(rawName, tm.currentLanguage);
     final String category = exerciseData['category'] ?? '';
     final String level = exerciseData['level'] ?? '';
     final String equipment = exerciseData['equipment'] ?? '';
@@ -31,7 +33,13 @@ class ExerciseLibraryDetailScreen extends StatelessWidget {
     final String force = exerciseData['force'] ?? '';
     final List<dynamic> primaryMuscles = exerciseData['primaryMuscles'] ?? [];
     final List<dynamic> secondaryMuscles = exerciseData['secondaryMuscles'] ?? [];
-    final List<dynamic> instructions = exerciseData['instructions'] ?? [];
+    final List<dynamic> instructionsEn = exerciseData['instructions'] ?? [];
+    final List<dynamic> instructionsPt = exerciseData['instructions_pt'] ?? [];
+    
+    final List<dynamic> instructions = (isPt && instructionsPt.isNotEmpty) 
+        ? instructionsPt 
+        : instructionsEn;
+        
     final List<dynamic> images = exerciseData['images'] ?? [];
 
     // Map free-exercise-db muscle to our app's muscleGroup
@@ -82,7 +90,7 @@ class ExerciseLibraryDetailScreen extends StatelessWidget {
 
     Future<void> importExercise() async {
       final localExercise = Exercise(
-        name: name,
+        name: translatedName,
         muscleGroup: muscleGroup,
         libraryId: exerciseData['id'],
         category: category,
@@ -98,7 +106,7 @@ class ExerciseLibraryDetailScreen extends StatelessWidget {
       Navigator.pop(context);
       
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(isPt ? '$name importado com sucesso!' : '$name imported successfully!'),
+        content: Text(isPt ? '$translatedName importado com sucesso!' : '$translatedName imported successfully!'),
         backgroundColor: Colors.green,
       ));
     }
@@ -106,7 +114,7 @@ class ExerciseLibraryDetailScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: Text(name),
+        title: Text(translatedName),
         backgroundColor: Colors.black,
       ),
       body: SingleChildScrollView(
@@ -285,7 +293,8 @@ class ExerciseLibraryDetailScreen extends StatelessWidget {
                   onPressed: () async {
                     final exercises = await DatabaseHelper.instance.getExercises();
                     final localEx = exercises.firstWhere(
-                      (e) => e.name.toLowerCase() == name.toLowerCase(),
+                      (e) => e.name.toLowerCase() == rawName.toLowerCase() || 
+                             e.name.toLowerCase() == translatedName.toLowerCase(),
                     );
                     if (context.mounted) {
                       Navigator.push(

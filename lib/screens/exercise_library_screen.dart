@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../managers/translation_manager.dart';
+import '../managers/exercise_translator.dart';
 import '../db/database_helper.dart';
 import '../models/exercise.dart';
 import 'exercise_library_detail_screen.dart';
@@ -89,8 +90,14 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen> with Sing
     setState(() {
       if (_tabController.index == 0) {
         // Library Tab
+        final tm = TranslationManager.instance;
         _filteredExercises = _allLibraryExercises.where((ex) {
-          final nameMatch = ex['name'].toString().toLowerCase().contains(_searchQuery.toLowerCase());
+          final rawName = ex['name'].toString();
+          final translatedName = ExerciseTranslator.translateName(rawName, tm.currentLanguage);
+          final queryLower = _searchQuery.toLowerCase();
+          
+          final nameMatch = rawName.toLowerCase().contains(queryLower) || 
+                            translatedName.toLowerCase().contains(queryLower);
           
           bool muscleMatch = true;
           if (_selectedMuscle != 'All') {
@@ -382,19 +389,22 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen> with Sing
                           if (_tabController.index == 0) {
                             // Library Item
                             final ex = item as Map<String, dynamic>;
-                            final String name = ex['name'];
+                            final String rawName = ex['name'];
+                            final String translatedName = ExerciseTranslator.translateName(rawName, tm.currentLanguage);
+                            
                             final List<dynamic> primary = ex['primaryMuscles'];
                             final String muscleText = primary.join(', ');
                             final String level = ex['level']?.toString() ?? '';
                             final String force = ex['force']?.toString() ?? '';
                             final String? imgPath = ex['images'] != null && (ex['images'] as List).isNotEmpty ? ex['images'][0] : null;
-                            final isImported = _importedExerciseNames.contains(name.toLowerCase());
+                            final isImported = _importedExerciseNames.contains(rawName.toLowerCase()) || 
+                                               _importedExerciseNames.contains(translatedName.toLowerCase());
 
                             return ListTile(
                               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                               leading: _buildImageThumbnail(imgPath),
                               title: Text(
-                                name,
+                                translatedName,
                                 style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                               ),
                               subtitle: Column(
@@ -432,7 +442,9 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen> with Sing
                                   : const Icon(Icons.chevron_right, color: Colors.grey),
                               onTap: () async {
                                 if (widget.isSelector && isImported) {
-                                  final exLocal = _myExercises.firstWhere((e) => e.name.toLowerCase() == name.toLowerCase());
+                                  final exLocal = _myExercises.firstWhere((e) => 
+                                    e.name.toLowerCase() == rawName.toLowerCase() || 
+                                    e.name.toLowerCase() == translatedName.toLowerCase());
                                   Navigator.pop(context, exLocal);
                                 } else {
                                   await Navigator.push(

@@ -71,8 +71,8 @@ void main() {
     await tester.pumpWidget(createTestableWidget());
     await tester.pumpAndSettle();
 
-    expect(find.text('Bench Press'), findsOneWidget);
-    expect(find.text('Squat'), findsOneWidget);
+    expect(find.text('Supino Reto'), findsOneWidget);
+    expect(find.text('Agachamento Livre'), findsOneWidget);
   });
 
   testWidgets('Searching exercises should filter the list', (WidgetTester tester) async {
@@ -85,8 +85,8 @@ void main() {
     await tester.enterText(searchField, 'Bench');
     await tester.pump(); 
 
-    expect(find.text('Bench Press'), findsOneWidget);
-    expect(find.text('Squat'), findsNothing);
+    expect(find.text('Supino Reto'), findsOneWidget);
+    expect(find.text('Agachamento Livre'), findsNothing);
   });
 
   testWidgets('Filtering by muscle should filter the list', (WidgetTester tester) async {
@@ -106,8 +106,8 @@ void main() {
     await tester.tap(find.text('Peito').last);
     await tester.pumpAndSettle();
 
-    expect(find.text('Bench Press'), findsOneWidget);
-    expect(find.text('Squat'), findsNothing);
+    expect(find.text('Supino Reto'), findsOneWidget);
+    expect(find.text('Agachamento Livre'), findsNothing);
   });
 
   testWidgets('Tapping an exercise should navigate to Detail screen', (WidgetTester tester) async {
@@ -116,11 +116,11 @@ void main() {
     await tester.pumpWidget(createTestableWidget());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Bench Press'));
+    await tester.tap(find.text('Supino Reto'));
     await tester.pumpAndSettle();
 
     expect(find.byType(ExerciseLibraryDetailScreen), findsOneWidget);
-    expect(find.text('Bench Press'), findsOneWidget);
+    expect(find.text('Supino Reto'), findsOneWidget);
     expect(find.text('BARBELL'), findsOneWidget);
     expect(find.text('EMPURRAR'), findsOneWidget);
   });
