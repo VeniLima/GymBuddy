@@ -35,6 +35,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   
   double _height = 0;
   List<Map<String, dynamic>> _weightLogs = [];
+  List<Map<String, dynamic>> _bodyMeasurements = [];
+  String _selectedMeasurementType = 'prof_arm';
   List<String> _workoutDatesLast7Days = [];
   List<String> _workoutDatesCurrentMonth = [];
   
@@ -76,6 +78,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final dist = await DatabaseHelper.instance.getMuscleGroupDistribution(30);
     final exercises = await DatabaseHelper.instance.getExercises();
     final weightLogs = await DatabaseHelper.instance.getWeightLogs();
+    final bodyMeasurements = await DatabaseHelper.instance.getBodyMeasurements();
     final last7Dates = await DatabaseHelper.instance.getWorkoutDatesLast7Days();
     final monthDates = await DatabaseHelper.instance.getWorkoutDatesCurrentMonth();
     final enableRpe = prefs.getBool('user_enable_rpe') ?? false;
@@ -123,6 +126,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _enableRpe = enableRpe;
       _enableRestTimer = enableRestTimer;
       _weightLogs = weightLogs;
+      _bodyMeasurements = bodyMeasurements;
       _totalWorkouts = stats['total'] ?? 0;
       _thisMonthWorkouts = stats['thisMonth'] ?? 0;
       _muscleDistribution = dist;
@@ -223,6 +227,94 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Text(tm.translate('prof_save'), style: const TextStyle(color: Colors.white)),
             ),
           ],
+        );
+      }
+    );
+  }
+
+  Future<void> _addMeasurement(String type, double value) async {
+    await DatabaseHelper.instance.insertBodyMeasurement(type, value);
+    _loadData();
+  }
+  
+  Future<void> _deleteMeasurement(int id) async {
+    await DatabaseHelper.instance.deleteBodyMeasurement(id);
+    _loadData();
+  }
+
+  void _showAddMeasurementDialog() {
+    final controller = TextEditingController();
+    final tm = TranslationManager.instance;
+    String selectedType = 'prof_arm';
+    
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: Colors.grey[900],
+              title: Text(tm.translate('prof_log_measurement'), style: const TextStyle(color: Colors.white)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DropdownButtonHideUnderline(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[800],
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: DropdownButton<String>(
+                        value: selectedType,
+                        isExpanded: true,
+                        dropdownColor: Colors.grey[800],
+                        style: const TextStyle(color: Colors.white),
+                        items: [
+                          DropdownMenuItem(value: 'prof_arm', child: Text(tm.translate('prof_arm'))),
+                          DropdownMenuItem(value: 'prof_waist', child: Text(tm.translate('prof_waist'))),
+                          DropdownMenuItem(value: 'prof_thigh', child: Text(tm.translate('prof_thigh'))),
+                          DropdownMenuItem(value: 'prof_chest', child: Text(tm.translate('prof_chest'))),
+                          DropdownMenuItem(value: 'prof_calf', child: Text(tm.translate('prof_calf'))),
+                        ],
+                        onChanged: (val) {
+                          if (val != null) setDialogState(() => selectedType = val);
+                        },
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: controller,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      hintText: 'e.g. 40.5 (cm)',
+                      hintStyle: TextStyle(color: Colors.grey[500]),
+                      enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Colors.blue)),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(tm.translate('ex_cancel'), style: const TextStyle(color: Colors.grey)),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                  onPressed: () {
+                    final val = double.tryParse(controller.text.replaceAll(',', '.'));
+                    if (val != null && val > 0) {
+                      _addMeasurement(selectedType, val);
+                      Navigator.pop(context);
+                    }
+                  },
+                  child: Text(tm.translate('prof_save'), style: const TextStyle(color: Colors.white)),
+                ),
+              ],
+            );
+          }
         );
       }
     );
@@ -815,6 +907,124 @@ class _ProfileScreenState extends State<ProfileScreen> {
             );
           },
         )
+      ],
+    );
+  }
+
+  Widget _buildBodyMeasurementsSection() {
+    final tm = TranslationManager.instance;
+    final filteredMeasurements = _bodyMeasurements.where((m) => m['type'] == _selectedMeasurementType).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(tm.translate('prof_measurements'), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+            TextButton(
+              onPressed: _showAddMeasurementDialog,
+              child: Text(tm.translate('prof_log_measurement'), style: const TextStyle(color: Colors.blue)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: _selectedMeasurementType,
+              isExpanded: true,
+              dropdownColor: Colors.grey[900],
+              style: const TextStyle(color: Colors.white),
+              items: [
+                DropdownMenuItem(value: 'prof_arm', child: Text(tm.translate('prof_arm'))),
+                DropdownMenuItem(value: 'prof_waist', child: Text(tm.translate('prof_waist'))),
+                DropdownMenuItem(value: 'prof_thigh', child: Text(tm.translate('prof_thigh'))),
+                DropdownMenuItem(value: 'prof_chest', child: Text(tm.translate('prof_chest'))),
+                DropdownMenuItem(value: 'prof_calf', child: Text(tm.translate('prof_calf'))),
+              ],
+              onChanged: (val) {
+                if (val != null) {
+                  setState(() => _selectedMeasurementType = val);
+                }
+              },
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        if (filteredMeasurements.length > 1)
+          SizedBox(
+            height: 150,
+            child: LineChart(
+              LineChartData(
+                gridData: const FlGridData(show: false),
+                titlesData: FlTitlesData(
+                  show: true,
+                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  bottomTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 40,
+                      getTitlesWidget: (value, meta) {
+                        return Text('${value.toInt()}', style: const TextStyle(color: Colors.grey, fontSize: 10));
+                      },
+                    ),
+                  ),
+                ),
+                borderData: FlBorderData(show: false),
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: filteredMeasurements.reversed.toList().asMap().entries.map((entry) {
+                      return FlSpot(entry.key.toDouble(), (entry.value['value'] as num).toDouble());
+                    }).toList(),
+                    isCurved: true,
+                    color: Colors.orange,
+                    barWidth: 3,
+                    dotData: const FlDotData(show: true),
+                    belowBarData: BarAreaData(show: true, color: Colors.orange.withOpacity(0.1)),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else if (filteredMeasurements.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Text(tm.translate('stats_no_data'), style: const TextStyle(color: Colors.white54)),
+          ),
+        const SizedBox(height: 16),
+        if (filteredMeasurements.isNotEmpty) ...[
+          Text(tm.translate('prof_measurement_history'), style: const TextStyle(fontSize: 16, color: Colors.white70)),
+          const SizedBox(height: 8),
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: filteredMeasurements.length > 5 ? 5 : filteredMeasurements.length,
+            itemBuilder: (context, index) {
+              final log = filteredMeasurements[index];
+              final date = DateTime.parse(log['date']);
+              final dateStr = DateFormat('MMM d, yyyy - HH:mm', tm.currentLanguage).format(date);
+              
+              return ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.circle, size: 12, color: Colors.orange),
+                title: Text('${(log['value'] as num).toDouble()} cm', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                subtitle: Text(dateStr, style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                trailing: IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                  onPressed: () => _deleteMeasurement(log['id']),
+                ),
+              );
+            },
+          )
+        ]
       ],
     );
   }
@@ -1598,6 +1808,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _buildWeightHistorySection(),
               const SizedBox(height: 32),
             ],
+
+            const Divider(color: Colors.white24),
+            const SizedBox(height: 24),
+            _buildBodyMeasurementsSection(),
+            const SizedBox(height: 32),
             
             Text(isPt ? 'Distribuição Muscular (30 dias)' : 'Muscle Distribution (30 days)', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
             const SizedBox(height: 24),

@@ -136,5 +136,25 @@ void main() {
       expect(lastSets[0].weight, 100.0);
       expect(lastSets[1].weight, 150.0);
     });
+
+    test('CRUD Body Measurements', () async {
+      // Insert
+      final id1 = await dbHelper.insertBodyMeasurement('prof_arm', 40.5);
+      final id2 = await dbHelper.insertBodyMeasurement('prof_waist', 80.0);
+      expect(id1, isPositive);
+      expect(id2, isPositive);
+
+      // Query
+      final list = await dbHelper.getBodyMeasurements();
+      expect(list.length, greaterThanOrEqualTo(2));
+      expect(list.any((m) => m['id'] == id1 && m['type'] == 'prof_arm' && m['value'] == 40.5), true);
+      expect(list.any((m) => m['id'] == id2 && m['type'] == 'prof_waist' && m['value'] == 80.0), true);
+
+      // Delete
+      await dbHelper.deleteBodyMeasurement(id1);
+      final listAfterDelete = await dbHelper.getBodyMeasurements();
+      expect(listAfterDelete.any((m) => m['id'] == id1), false);
+      expect(listAfterDelete.any((m) => m['id'] == id2), true);
+    });
   });
 }

@@ -60,6 +60,9 @@ void main() {
       // Log de peso
       await dbHelper.insertWeightLog(75.5);
 
+      // Log de medidas corporais
+      await dbHelper.insertBodyMeasurement('prof_chest', 105.0);
+
       // 2. Exportar dados
       final backup = await dbHelper.exportToMap();
 
@@ -69,6 +72,7 @@ void main() {
       expect(backup.containsKey('workouts'), true);
       expect(backup.containsKey('workout_sets'), true);
       expect(backup.containsKey('weight_logs'), true);
+      expect(backup.containsKey('body_measurements'), true);
 
       // Verificar que o exercício customizado e o treino estão lá
       final List<dynamic> exercisesList = backup['exercises'];
@@ -76,17 +80,21 @@ void main() {
       final List<dynamic> workoutsList = backup['workouts'];
       final List<dynamic> setsList = backup['workout_sets'];
       final List<dynamic> weightLogsList = backup['weight_logs'];
+      final List<dynamic> measurementsList = backup['body_measurements'] ?? [];
 
       expect(exercisesList.any((e) => e['id'] == customEx.id && e['name'] == 'Backup Custom Push'), true);
       expect(routinesList.any((r) => r['id'] == insertedRoutine.id && r['name'] == 'Backup Routine A'), true);
       expect(workoutsList.any((w) => w['id'] == insertedWorkout.id && w['name'] == 'Backup Workout 1'), true);
       expect(setsList.any((s) => s['workoutId'] == insertedWorkout.id && s['rpe'] == 8.5), true);
       expect(weightLogsList.any((l) => l['weight'] == 75.5), true);
+      expect(measurementsList.any((m) => m['value'] == 105.0 && m['type'] == 'prof_chest'), true);
 
       // 3. Modificar ou limpar o banco inserindo novos dados
       await dbHelper.insertWeightLog(99.9);
       final listBeforeRestore = await dbHelper.getWeightLogs();
       expect(listBeforeRestore.any((l) => l['weight'] == 99.9), true);
+
+      await dbHelper.insertBodyMeasurement('prof_arm', 42.0);
 
       // 4. Restaurar a partir do backup exportado
       await dbHelper.restoreFromMap(backup);
@@ -96,6 +104,10 @@ void main() {
       // O log de 99.9 foi deletado, e o log de 75.5 voltou
       expect(weightLogsAfter.any((l) => l['weight'] == 99.9), false);
       expect(weightLogsAfter.any((l) => l['weight'] == 75.5), true);
+
+      final measurementsAfter = await dbHelper.getBodyMeasurements();
+      expect(measurementsAfter.any((m) => m['value'] == 42.0), false);
+      expect(measurementsAfter.any((m) => m['value'] == 105.0), true);
 
       final exercisesAfter = await dbHelper.getExercises();
       expect(exercisesAfter.any((e) => e.name == 'Backup Custom Push'), true);

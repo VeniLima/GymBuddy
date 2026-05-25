@@ -325,6 +325,16 @@ class TranslationManager extends ChangeNotifier {
       'prof_backup_csv': 'Exportar CSV',
       'prof_backup_json': 'Backup JSON',
       'prof_backup_restore': 'Restaurar',
+
+      // Medidas Corporais (Portuguese)
+      'prof_measurements': 'Medidas Corporais',
+      'prof_arm': 'Braço',
+      'prof_waist': 'Cintura',
+      'prof_thigh': 'Coxa',
+      'prof_chest': 'Peito',
+      'prof_calf': 'Panturrilha',
+      'prof_log_measurement': 'Registrar Medida',
+      'prof_measurement_history': 'Histórico',
     },
     'en': {
       // Bottom Navigation
@@ -587,6 +597,16 @@ class TranslationManager extends ChangeNotifier {
       'prof_backup_csv': 'Export CSV',
       'prof_backup_json': 'Backup JSON',
       'prof_backup_restore': 'Restore',
+
+      // Body Measurements (English)
+      'prof_measurements': 'Body Measurements',
+      'prof_arm': 'Arm',
+      'prof_waist': 'Waist',
+      'prof_thigh': 'Thigh',
+      'prof_chest': 'Chest',
+      'prof_calf': 'Calf',
+      'prof_log_measurement': 'Log Measurement',
+      'prof_measurement_history': 'History',
     }
   };
 }

@@ -28,7 +28,7 @@ class DatabaseHelper {
   Future<void> initTestDatabase() async {
     _database = await openDatabase(
       inMemoryDatabasePath,
-      version: 15,
+      version: 16,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -40,7 +40,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 15,
+      version: 16,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -184,8 +184,22 @@ CREATE TABLE weight_logs (
     if (oldVersion < 14) {
       try {
         await db.execute('ALTER TABLE routine_exercises ADD COLUMN superSetId TEXT');
-        await db.execute('ALTER TABLE workout_sets ADD COLUMN superSetId TEXT');
       } catch (e) {}
+    }
+    if (oldVersion < 15) {
+      try {
+        await db.execute('ALTER TABLE workouts ADD COLUMN muscleGroups TEXT');
+      } catch (e) {}
+    }
+    if (oldVersion < 16) {
+      await db.execute('''
+CREATE TABLE body_measurements (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  date TEXT NOT NULL,
+  type TEXT NOT NULL,
+  value REAL NOT NULL
+)
+''');
     }
   }
 
@@ -314,6 +328,15 @@ CREATE TABLE weight_logs (
   id $idType,
   date $textType,
   weight $doubleType
+)
+''');
+
+    await db.execute('''
+CREATE TABLE body_measurements (
+  id $idType,
+  date $textType,
+  type $textType,
+  value $doubleType
 )
 ''');
   }
@@ -729,6 +752,26 @@ CREATE TABLE weight_logs (
     return await db.delete('weight_logs', where: 'id = ?', whereArgs: [id]);
   }
 
+  // --- Body Measurements ---
+  Future<int> insertBodyMeasurement(String type, double value) async {
+    final db = await instance.database;
+    return await db.insert('body_measurements', {
+      'date': DateTime.now().toIso8601String(),
+      'type': type,
+      'value': value,
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> getBodyMeasurements() async {
+    final db = await instance.database;
+    return await db.query('body_measurements', orderBy: 'date ASC');
+  }
+
+  Future<int> deleteBodyMeasurement(int id) async {
+    final db = await instance.database;
+    return await db.delete('body_measurements', where: 'id = ?', whereArgs: [id]);
+  }
+
   // --- Backup and Restore ---
   Future<Map<String, dynamic>> exportToMap() async {
     final db = await instance.database;
@@ -738,6 +781,7 @@ CREATE TABLE weight_logs (
     final workouts = await db.query('workouts');
     final workoutSets = await db.query('workout_sets');
     final weightLogs = await db.query('weight_logs');
+    final bodyMeasurements = await db.query('body_measurements');
 
     return {
       'exercises': exercises,
@@ -746,6 +790,7 @@ CREATE TABLE weight_logs (
       'workouts': workouts,
       'workout_sets': workoutSets,
       'weight_logs': weightLogs,
+      'body_measurements': bodyMeasurements,
     };
   }
 
@@ -758,6 +803,7 @@ CREATE TABLE weight_logs (
       await txn.delete('workouts');
       await txn.delete('routines');
       await txn.delete('weight_logs');
+      await txn.delete('body_measurements');
       await txn.delete('exercises');
 
       List<dynamic> getList(String key) => data[key] as List<dynamic>? ?? [];
@@ -780,6 +826,9 @@ CREATE TABLE weight_logs (
       }
       for (var row in getList('weight_logs')) {
         await txn.insert('weight_logs', Map<String, dynamic>.from(row));
+      }
+      for (var row in getList('body_measurements')) {
+        await txn.insert('body_measurements', Map<String, dynamic>.from(row));
       }
     });
   }
