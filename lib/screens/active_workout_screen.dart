@@ -221,6 +221,79 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
     );
   }
 
+  void _showFeederSetsDialog(Exercise exercise) {
+    final isPt = tm.currentLanguage == 'pt';
+    final targetController = TextEditingController();
+    
+    // Auto-fill with max weight if available
+    final maxW = wm.exerciseHistoricalMax[exercise.id!] ?? 0.0;
+    if (maxW > 0) {
+      targetController.text = (maxW == maxW.roundToDouble()) ? maxW.toInt().toString() : maxW.toString();
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF1E1E1E),
+          title: Text(
+            tm.translate('feeder_target_title'),
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                tm.translate('feeder_target_desc'),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: targetController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                autofocus: true,
+                style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+                decoration: InputDecoration(
+                  hintText: 'ex: 100',
+                  hintStyle: const TextStyle(color: Colors.grey, fontSize: 20),
+                  suffixText: 'kg',
+                  suffixStyle: const TextStyle(color: Colors.grey, fontSize: 16),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: Colors.grey.shade800),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: Colors.amber),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(isPt ? 'Cancelar' : 'Cancel', style: const TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black),
+              onPressed: () {
+                final val = double.tryParse(targetController.text.replaceAll(',', '.')) ?? 0;
+                if (val > 0) {
+                  wm.addFeederSets(exercise, val);
+                  Navigator.pop(context);
+                }
+              },
+              child: Text(tm.translate('feeder_generate'), style: const TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _buildRestTimerPill() {
     final isPt = TranslationManager.instance.currentLanguage == 'pt';
     bool isDone = wm.restSecondsRemaining == 0;
@@ -782,14 +855,27 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
               ),
             );
           }),
-          TextButton.icon(
-            onPressed: () => wm.addSet(exercise),
-            icon: const Icon(Icons.add, size: 16),
-            label: Text(tm.translate('act_add_set'), style: const TextStyle(fontSize: 12)),
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.grey,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            ),
+          Row(
+            children: [
+              TextButton.icon(
+                onPressed: () => wm.addSet(exercise),
+                icon: const Icon(Icons.add, size: 16),
+                label: Text(tm.translate('act_add_set'), style: const TextStyle(fontSize: 12)),
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.grey,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                ),
+              ),
+              if (!isCardio)
+                TextButton.icon(
+                  onPressed: () => _showFeederSetsDialog(exercise),
+                  icon: const Icon(Icons.whatshot, size: 16, color: Colors.amber),
+                  label: Text(tm.translate('act_suggest_feeder'), style: const TextStyle(fontSize: 12, color: Colors.amber)),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  ),
+                ),
+            ],
           ),
         ],
       ),

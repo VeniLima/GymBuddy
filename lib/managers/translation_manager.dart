@@ -238,6 +238,12 @@ class TranslationManager extends ChangeNotifier {
       'st_drop': 'Drop Set',
       'st_serie': 'Série',
 
+      // Feeder Sets
+      'act_suggest_feeder': 'Sugerir Aquecimento',
+      'feeder_target_title': 'Carga Alvo de Trabalho',
+      'feeder_target_desc': 'Digite a carga de trabalho planejada para a primeira série normal deste exercício. Vamos calcular 3 séries de aquecimento para prepará-lo.',
+      'feeder_generate': 'Gerar Séries',
+
       // RPE / RIR Selection & Settings
       'prof_enable_rpe': 'Habilitar RPE / RIR',
       'prof_enable_rpe_desc': 'Registrar esforço percebido e repetições na reserva para cada série',
@@ -509,6 +515,12 @@ class TranslationManager extends ChangeNotifier {
       'st_failure': 'Failure',
       'st_drop': 'Drop Set',
       'st_serie': 'Set',
+
+      // Feeder Sets
+      'act_suggest_feeder': 'Feeder Sets',
+      'feeder_target_title': 'Target Working Weight',
+      'feeder_target_desc': 'Enter the planned working weight for your first normal set. We will calculate 3 feeder sets to prepare you.',
+      'feeder_generate': 'Generate Sets',
 
       // RPE / RIR Selection & Settings
       'prof_enable_rpe': 'Enable RPE / RIR',

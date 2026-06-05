@@ -159,6 +159,43 @@ class WorkoutManager extends ChangeNotifier {
     }
   }
 
+  void addFeederSets(Exercise exercise, double targetWeight) {
+    if (workoutExercises.containsKey(exercise)) {
+      double w1 = (targetWeight * 0.50).roundToDouble();
+      double w2 = (targetWeight * 0.80).roundToDouble();
+      double w3 = (targetWeight * 0.90).roundToDouble();
+
+      final feeder1 = WorkoutSet(
+        exerciseId: exercise.id!,
+        reps: 8,
+        weight: w1,
+        setType: 'Warmup',
+        superSetId: _routineSuperSets[exercise.id!],
+      );
+
+      final feeder2 = WorkoutSet(
+        exerciseId: exercise.id!,
+        reps: 5,
+        weight: w2,
+        setType: 'Warmup',
+        superSetId: _routineSuperSets[exercise.id!],
+      );
+
+      final feeder3 = WorkoutSet(
+        exerciseId: exercise.id!,
+        reps: 1,
+        weight: w3,
+        setType: 'Warmup',
+        superSetId: _routineSuperSets[exercise.id!],
+      );
+
+      // Insert them at the top of the set list
+      workoutExercises[exercise]!.insertAll(0, [feeder1, feeder2, feeder3]);
+      
+      notifyListeners();
+    }
+  }
+
   void removeSet(Exercise exercise, int index) {
     if (workoutExercises.containsKey(exercise) && workoutExercises[exercise]!.length > index) {
       workoutExercises[exercise]!.removeAt(index);
