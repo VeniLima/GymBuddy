@@ -666,9 +666,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final file = File('${tempDir.path}/gymbuddy_history.csv');
       await file.writeAsString(csvBuffer.toString(), encoding: utf8);
 
+      final box = context.findRenderObject() as RenderBox?;
+      final origin = box != null
+          ? (box.localToGlobal(Offset.zero) & box.size)
+          : null;
+
       await Share.shareXFiles(
         [XFile(file.path)],
         subject: isPt ? 'Histórico de Treinos GymBuddy' : 'GymBuddy Workout History',
+        sharePositionOrigin: origin,
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -687,9 +693,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final file = File('${tempDir.path}/gymbuddy_backup.json');
       await file.writeAsString(jsonString, encoding: utf8);
 
+      final box = context.findRenderObject() as RenderBox?;
+      final origin = box != null
+          ? (box.localToGlobal(Offset.zero) & box.size)
+          : null;
+
       await Share.shareXFiles(
         [XFile(file.path)],
         subject: isPt ? 'Backup GymBuddy' : 'GymBuddy Backup',
+        sharePositionOrigin: origin,
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(

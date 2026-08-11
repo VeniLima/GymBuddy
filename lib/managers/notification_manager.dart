@@ -20,16 +20,34 @@ class NotificationManager {
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
+    const DarwinInitializationSettings initializationSettingsDarwin =
+        DarwinInitializationSettings(
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
+    );
+
     const InitializationSettings initializationSettings = InitializationSettings(
       android: initializationSettingsAndroid,
+      iOS: initializationSettingsDarwin,
+      macOS: initializationSettingsDarwin,
     );
 
     await _plugin.initialize(settings: initializationSettings);
 
     // Solicitar permissão no Android 13+
     await _plugin
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()      
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
         ?.requestNotificationsPermission();
+
+    // Solicitar permissão no iOS / macOS
+    await _plugin
+        .resolvePlatformSpecificImplementation<DarwinFlutterLocalNotificationsPlugin>()
+        ?.requestPermissions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
 
     _initialized = true;
   }
@@ -39,7 +57,7 @@ class NotificationManager {
     int secondsElapsed, {
     int? restTime,
   }) async {
-    // Para que o Android conte o tempo sozinho na notificação (como um cronômetro),       
+    // Para que o Android conte o tempo sozinho na notificação (como um cronômetro),
     // usamos usesChronometer: true e ajustamos o 'when'.
     final int when = DateTime.now().millisecondsSinceEpoch - (secondsElapsed * 1000);
 
@@ -63,7 +81,17 @@ class NotificationManager {
       color: const Color(0xFF1E88E5), 
     );
 
-    final NotificationDetails details = NotificationDetails(android: androidDetails);
+    const DarwinNotificationDetails darwinDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: false,
+      presentSound: false,
+    );
+
+    final NotificationDetails details = NotificationDetails(
+      android: androidDetails,
+      iOS: darwinDetails,
+      macOS: darwinDetails,
+    );
 
     await _plugin.show(
       id: 0,
@@ -91,7 +119,18 @@ class NotificationManager {
       enableVibration: true,
     );
 
-    const NotificationDetails details = NotificationDetails(android: androidDetails);
+    const DarwinNotificationDetails darwinDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+      interruptionLevel: InterruptionLevel.timeSensitive,
+    );
+
+    const NotificationDetails details = NotificationDetails(
+      android: androidDetails,
+      iOS: darwinDetails,
+      macOS: darwinDetails,
+    );
 
     await _plugin.show(
       id: 1, 
