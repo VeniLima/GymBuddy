@@ -33,7 +33,7 @@ class NotificationManager {
       macOS: initializationSettingsDarwin,
     );
 
-    await _plugin.initialize(settings: initializationSettings);
+    await _plugin.initialize(initializationSettings);
 
     // Solicitar permissão no Android 13+
     await _plugin
@@ -94,15 +94,15 @@ class NotificationManager {
     );
 
     await _plugin.show(
-      id: 0,
-      title: 'Treino em Andamento',
-      body: body,
-      notificationDetails: details,
+      0,
+      'Treino em Andamento',
+      body,
+      details,
     );
   }
 
   Future<void> hideWorkoutNotification() async {
-    await _plugin.cancel(id: 0);
+    await _plugin.cancel(0);
   }
 
   Future<void> showRestCompleteNotification({
@@ -133,10 +133,10 @@ class NotificationManager {
     );
 
     await _plugin.show(
-      id: 1, 
-      title: title,
-      body: body,
-      notificationDetails: details,
+      1, 
+      title,
+      body,
+      details,
     );
   }
 }
