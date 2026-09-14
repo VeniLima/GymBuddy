@@ -256,6 +256,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                     children: [
                       IconButton(
                         icon: const Icon(Icons.remove_circle_outline, size: 36, color: Colors.white70),
+                        tooltip: isPt ? 'Diminuir 30 segundos' : 'Decrease 30 seconds',
                         onPressed: () {
                           if (currentSeconds > 30) {
                             setModalState(() => currentSeconds -= 30);
@@ -268,6 +269,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                       ),
                       IconButton(
                         icon: const Icon(Icons.add_circle_outline, size: 36, color: Colors.white70),
+                        tooltip: isPt ? 'Aumentar 30 segundos' : 'Increase 30 seconds',
                         onPressed: () {
                           if (currentSeconds < 300) {
                             setModalState(() => currentSeconds += 30);

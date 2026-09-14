@@ -154,6 +154,15 @@ void main() {
     expect(find.text('Abdutores'), findsWidgets);
   });
 
+  testWidgets('Add-exercise icon button must expose a screen-reader label', (WidgetTester tester) async {
+    when(() => mockDb.getExercises()).thenAnswer((_) async => []);
+
+    await tester.pumpWidget(createTestableWidget());
+    await tester.pumpAndSettle();
+
+    expect(find.byTooltip('Adicionar exercício personalizado'), findsOneWidget);
+  });
+
   testWidgets('Tapping an exercise should navigate to Detail screen', (WidgetTester tester) async {
     when(() => mockDb.getExercises()).thenAnswer((_) async => []);
 

@@ -58,6 +58,16 @@ void main() {
     expect(find.text('Full Body'), findsOneWidget);
   });
 
+  testWidgets('Icon-only buttons must expose a screen-reader label', (WidgetTester tester) async {
+    when(() => mockDb.getRoutines()).thenAnswer((_) async => []);
+
+    await tester.pumpWidget(createTestableWidget());
+    await tester.pumpAndSettle();
+
+    expect(find.byTooltip('Histórico de treinos'), findsOneWidget);
+    expect(find.byTooltip('Organizar em pastas'), findsOneWidget);
+  });
+
   testWidgets('Clicking "Iniciar Treino Vazio" should start workout in manager', (WidgetTester tester) async {
     when(() => mockDb.getRoutines()).thenAnswer((_) async => []);
     when(() => mockDb.getExercises()).thenAnswer((_) async => []);

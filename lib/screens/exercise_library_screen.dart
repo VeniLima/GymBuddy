@@ -259,6 +259,7 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen> with Sing
           if (!widget.isSelector)
             IconButton(
               icon: const Icon(Icons.add),
+              tooltip: isPt ? 'Adicionar exercício personalizado' : 'Add custom exercise',
               onPressed: _showAddExerciseDialog,
             ),
         ],

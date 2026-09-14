@@ -36,6 +36,20 @@ void main() {
     expect(find.text('Nenhum dado registrado para este exercício.'), findsOneWidget);
   });
 
+  testWidgets('Rest time +/- icon buttons must expose a screen-reader label', (WidgetTester tester) async {
+    final exercise = Exercise(id: 1, name: 'Bench Press', muscleGroup: 'Chest');
+    when(() => mockDb.getCompletedSetsWithWorkoutInfo(1)).thenAnswer((_) async => []);
+
+    await tester.pumpWidget(createTestableWidget(exercise));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.timer_outlined));
+    await tester.pumpAndSettle();
+
+    expect(find.byTooltip('Diminuir 30 segundos'), findsOneWidget);
+    expect(find.byTooltip('Aumentar 30 segundos'), findsOneWidget);
+  });
+
   testWidgets('ExerciseDetailScreen should display personal records correctly', (WidgetTester tester) async {
     final exercise = Exercise(id: 1, name: 'Bench Press', muscleGroup: 'Chest');
     

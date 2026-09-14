@@ -6,6 +6,7 @@ import 'package:gymbuddy/screens/profile_screen.dart';
 import 'package:gymbuddy/db/database_helper.dart';
 import 'package:gymbuddy/managers/translation_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 class MockDatabaseHelper extends Mock implements DatabaseHelper {
   @override
@@ -30,10 +31,12 @@ class MockDatabase extends Mock implements Database {
 void main() {
   late MockDatabaseHelper mockDb;
 
-  setUpAll(() {
+  setUpAll(() async {
     mockDb = MockDatabaseHelper();
     DatabaseHelper.instance = mockDb;
-    
+    await initializeDateFormatting('pt', null);
+    await initializeDateFormatting('en', null);
+
     // Default stubs for ProfileScreen data
     when(() => mockDb.getWorkoutConsistencyStats()).thenAnswer((_) async => {'total': 10, 'thisMonth': 5});
     when(() => mockDb.getMuscleGroupDistribution(any())).thenAnswer((_) async => {'Chest': 20, 'Back': 15});
@@ -71,6 +74,33 @@ void main() {
     // Check BMI (approx 24.5)
     expect(find.text('24.5'), findsOneWidget);
     expect(find.text('Peso Normal'), findsOneWidget);
+  });
+
+  testWidgets('Delete icon buttons for weight/measurement entries must expose a screen-reader label', (WidgetTester tester) async {
+    SharedPreferences.setMockInitialValues({});
+
+    when(() => mockDb.getWeightLogs()).thenAnswer((_) async => [
+      {'id': 1, 'date': '2026-05-19', 'weight': 75.0}
+    ]);
+    when(() => mockDb.getBodyMeasurements()).thenAnswer((_) async => [
+      {'id': 1, 'date': '2026-05-19', 'type': 'prof_arm', 'value': 35.0}
+    ]);
+
+    // The weight/measurement history lists sit far down the page; make the
+    // test surface tall enough that the whole ListView renders without
+    // needing to scroll (sliver children off-screen are never built).
+    await tester.binding.setSurfaceSize(const Size(800, 5000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(createTestableWidget());
+    await tester.pumpAndSettle();
+
+    expect(find.byTooltip('Excluir registro de peso'), findsOneWidget);
+    expect(find.byTooltip('Excluir medida'), findsOneWidget);
+
+    // Reset stubs for the remaining tests in this file.
+    when(() => mockDb.getWeightLogs()).thenAnswer((_) async => []);
+    when(() => mockDb.getBodyMeasurements()).thenAnswer((_) async => []);
   });
 
   testWidgets('Toggling RPE switch should update SharedPreferences', (WidgetTester tester) async {

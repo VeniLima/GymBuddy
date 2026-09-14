@@ -99,6 +99,7 @@ class _WorkoutTabScreenState extends State<WorkoutTabScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.history),
+            tooltip: isPt ? 'Histórico de treinos' : 'Workout history',
             onPressed: () {
               Navigator.push(
                 context,
@@ -157,6 +158,7 @@ class _WorkoutTabScreenState extends State<WorkoutTabScreen> {
                   ),
                   IconButton(
                     icon: const Icon(Icons.create_new_folder_outlined),
+                    tooltip: isPt ? 'Organizar em pastas' : 'Organize into folders',
                     onPressed: () {},
                   ),
                 ],

@@ -943,6 +943,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               subtitle: Text(dateStr, style: const TextStyle(color: Colors.white54, fontSize: 12)),
               trailing: IconButton(
                 icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                tooltip: tm.currentLanguage == 'pt' ? 'Excluir registro de peso' : 'Delete weight entry',
                 onPressed: () => _deleteWeight(log['id']),
               ),
             );
@@ -1060,6 +1061,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 subtitle: Text(dateStr, style: const TextStyle(color: Colors.white54, fontSize: 12)),
                 trailing: IconButton(
                   icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                  tooltip: tm.currentLanguage == 'pt' ? 'Excluir medida' : 'Delete measurement',
                   onPressed: () => _deleteMeasurement(log['id']),
                 ),
               );
