@@ -42,22 +42,13 @@ Acesse a aba [**Releases**](https://github.com/VeniLima/GymBuddy/releases) no Gi
 2. Autorize a instalação de aplicativos de fontes desconhecidas se solicitado.
 3. Instale e comece a treinar!
 
-### 🍏 iPhone / iOS (`.ipa`)
-1. Baixe o arquivo `GymBuddy.ipa` no seu computador ou celular.
-2. Como o aplicativo é open-source e gratuito sem conta corporativa de distribuição, você pode instalá-lo no iPhone facilmente usando **Sideloading**:
-   - **Via [Sideloadly](https://sideloadly.io/) (Windows/Mac)**: Conecte o iPhone via cabo/Wi-Fi, arraste o arquivo `GymBuddy.ipa`, insira seu Apple ID gratuito e clique em **Start**.
-   - **Via [AltStore](https://altstore.io/)**: Instale o AltStore no seu iPhone e abra o `GymBuddy.ipa` diretamente no aparelho.
-   - **Via [TrollStore](https://trollstore.app/) / Scarlet**: Se o seu iOS for compatível, instale diretamente em 1 clique.
-3. No iPhone, acesse **Ajustes > Geral > Gerenciamento de Dispositivos e VPN**, confie no seu perfil e abra o app!
-
 ## 💻 Como Rodar o Projeto (Para Desenvolvedores)
 
 Se você quer ajudar a construir o GymBuddy ou compilar a sua própria versão a partir do código fonte:
 
 ### Pré-requisitos
 - [Flutter SDK](https://docs.flutter.dev/get-started/install) (versão 3.2.0 ou superior).
-- Um emulador Android/iOS ou um dispositivo físico conectado.
-- Xcode (necessário apenas para compilar iOS localmente em ambiente macOS).
+- Um emulador Android ou um dispositivo físico conectado.
 
 ### Instalação
 
@@ -84,17 +75,6 @@ Se você quer ajudar a construir o GymBuddy ou compilar a sua própria versão a
 flutter build apk --release
 ```
 O arquivo será gerado em: `build/app/outputs/flutter-apk/app-release.apk`.
-
-#### 🍏 iOS (IPA):
-Em um ambiente macOS com Xcode instalado:
-```bash
-flutter build ios --release --no-codesign
-cd build/ios/iphoneos
-mkdir Payload
-cp -r Runner.app Payload/
-zip -r GymBuddy.ipa Payload
-```
-*Dica: Você também pode usar a aba **Actions** no GitHub para gerar o `.ipa` automaticamente na nuvem sem precisar de um Mac local!*
 
 ## 🧪 Rodando os Testes
 O projeto conta com mais de 50 testes de unidade e widget para assegurar estabilidade (banco de dados, traduções, views etc). Para rodar os testes localmente:
