@@ -148,4 +148,32 @@ void main() {
     manager.cancelWorkout();
     await tester.pumpAndSettle();
   });
+
+  testWidgets('Digital clock updates from secondsElapsedNotifier alone', (WidgetTester tester) async {
+    final manager = WorkoutManager.instance;
+    final exercise = Exercise(id: 1, name: 'Bench Press', muscleGroup: 'Chest');
+
+    manager.isActive = true;
+    manager.workoutExercises.clear();
+    manager.workoutExercises[exercise] = [
+      WorkoutSet(exerciseId: 1, reps: 10, weight: 60, isCompleted: false)
+    ];
+    manager.secondsElapsedNotifier.value = 0;
+
+    await tester.pumpWidget(createTestableWidget());
+    await tester.pumpAndSettle();
+
+    expect(find.text('00:00'), findsOneWidget);
+
+    // The manager's own timer isn't running here (startWorkout wasn't
+    // called), so driving the notifier directly proves the clock reacts to
+    // it without needing the WorkoutManager ChangeNotifier to fire.
+    manager.secondsElapsedNotifier.value = 65;
+    await tester.pump();
+
+    expect(find.text('01:05'), findsOneWidget);
+
+    manager.cancelWorkout();
+    await tester.pumpAndSettle();
+  });
 }

@@ -560,6 +560,16 @@ CREATE TABLE body_measurements (
     return Sqflite.firstIntValue(result) ?? 0;
   }
 
+  /// Total seconds spent on completed cardio sets across every workout,
+  /// computed in SQL instead of loading the entire workout history into Dart.
+  Future<int> getTotalCompletedCardioSeconds() async {
+    final db = await instance.database;
+    final result = await db.rawQuery(
+      'SELECT SUM(durationSeconds) as total FROM workout_sets WHERE isCompleted = 1 AND durationSeconds IS NOT NULL',
+    );
+    return Sqflite.firstIntValue(result) ?? 0;
+  }
+
   Future<List<Workout>> getAllWorkoutsOrderedByDate() async {
     final db = await instance.database;
     final result = await db.query('workouts', orderBy: 'startTime ASC');
@@ -623,6 +633,60 @@ CREATE TABLE body_measurements (
       return (result.first['max_vol'] as num).toDouble();
     }
     return 0.0;
+  }
+
+  /// Historical max weight/volume for every exercise in one query, instead of
+  /// one getMaxWeightForExercise/getMaxVolumeForExercise pair per exercise.
+  Future<Map<int, Map<String, double>>> getExerciseMaxStats() async {
+    final db = await instance.database;
+    final result = await db.rawQuery('''
+      SELECT exerciseId, MAX(weight) as max_weight, MAX(weight * reps) as max_vol
+      FROM workout_sets
+      WHERE isCompleted = 1
+      GROUP BY exerciseId
+    ''');
+
+    final Map<int, Map<String, double>> stats = {};
+    for (var row in result) {
+      final exerciseId = row['exerciseId'] as int;
+      stats[exerciseId] = {
+        'maxWeight': (row['max_weight'] as num?)?.toDouble() ?? 0.0,
+        'maxVolume': (row['max_vol'] as num?)?.toDouble() ?? 0.0,
+      };
+    }
+    return stats;
+  }
+
+  /// The sets from the most recent completed workout for every exercise in
+  /// one query, instead of one getLastWorkoutSetsForExercise call per exercise.
+  Future<Map<int, List<WorkoutSet>>> getLastWorkoutSetsForAllExercises() async {
+    final db = await instance.database;
+    final result = await db.rawQuery('''
+      WITH last_ids AS (
+        SELECT exerciseId, MAX(id) as last_id
+        FROM workout_sets
+        WHERE isCompleted = 1
+        GROUP BY exerciseId
+      ),
+      last_workouts AS (
+        SELECT li.exerciseId, ws.workoutId as last_workout_id
+        FROM last_ids li
+        JOIN workout_sets ws ON ws.id = li.last_id
+      )
+      SELECT ws.*
+      FROM workout_sets ws
+      JOIN last_workouts lw
+        ON lw.exerciseId = ws.exerciseId AND lw.last_workout_id = ws.workoutId
+      WHERE ws.isCompleted = 1
+      ORDER BY ws.exerciseId, ws.id ASC
+    ''');
+
+    final Map<int, List<WorkoutSet>> byExercise = {};
+    for (var row in result) {
+      final set = WorkoutSet.fromMap(row);
+      byExercise.putIfAbsent(set.exerciseId, () => []).add(set);
+    }
+    return byExercise;
   }
 
   Future<List<WorkoutSet>> getLastWorkoutSetsForExercise(int exerciseId) async {

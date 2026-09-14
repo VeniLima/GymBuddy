@@ -298,54 +298,59 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
 
   Widget _buildRestTimerPill() {
     final isPt = TranslationManager.instance.currentLanguage == 'pt';
-    bool isDone = wm.restSecondsRemaining == 0;
-    
-    return GestureDetector(
-      onTap: isDone ? () => wm.skipRestTimer() : null,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        decoration: BoxDecoration(
-          color: isDone ? Colors.green.shade700 : Colors.blue.shade800,
-          borderRadius: BorderRadius.circular(30),
-          border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
-          boxShadow: [
-            BoxShadow(
-              color: isDone ? Colors.green.withOpacity(0.3) : Colors.blue.withOpacity(0.3),
-              blurRadius: 12,
-              offset: const Offset(0, 6),
-            )
-          ]
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Icon(isDone ? Icons.check_circle_outline_rounded : Icons.timer_outlined, color: Colors.white),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                isDone 
-                    ? (isPt ? "Hora de treinar!" : "Time to work!") 
-                    : _formatTimeDigital(wm.restSecondsRemaining),
-                style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-              ),
+
+    return ValueListenableBuilder<int>(
+      valueListenable: wm.restSecondsRemainingNotifier,
+      builder: (context, restSecondsRemaining, _) {
+        bool isDone = restSecondsRemaining == 0;
+
+        return GestureDetector(
+          onTap: isDone ? () => wm.skipRestTimer() : null,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            decoration: BoxDecoration(
+              color: isDone ? Colors.green.shade700 : Colors.blue.shade800,
+              borderRadius: BorderRadius.circular(30),
+              border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
+              boxShadow: [
+                BoxShadow(
+                  color: isDone ? Colors.green.withOpacity(0.3) : Colors.blue.withOpacity(0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
+                )
+              ]
             ),
-            if (!isDone)
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.skip_next_rounded, color: Colors.white, size: 22),
-                    onPressed: () => wm.skipRestTimer(),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Icon(isDone ? Icons.check_circle_outline_rounded : Icons.timer_outlined, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    isDone
+                        ? (isPt ? "Hora de treinar!" : "Time to work!")
+                        : _formatTimeDigital(restSecondsRemaining),
+                    style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-                ],
-              )
-            else
-              const Icon(Icons.close, color: Colors.white54, size: 18),
-          ],
-        ),
-      ),
+                ),
+                if (!isDone)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.skip_next_rounded, color: Colors.white, size: 22),
+                        onPressed: () => wm.skipRestTimer(),
+                        constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                      ),
+                    ],
+                  )
+                else
+                  const Icon(Icons.close, color: Colors.white54, size: 18),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -403,9 +408,12 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                             children: [
                               Text(isPt ? 'Tempo' : 'Time', style: const TextStyle(color: Colors.grey, fontSize: 12)),
                               const SizedBox(height: 4),
-                              FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text(_formatTimeDigital(wm.secondsElapsed), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                              ValueListenableBuilder<int>(
+                                valueListenable: wm.secondsElapsedNotifier,
+                                builder: (context, seconds, _) => FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(_formatTimeDigital(seconds), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                                ),
                               ),
                             ],
                           ),
@@ -620,7 +628,9 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                     const SizedBox(width: 16),
                   SizedBox(
                     width: 30,
+                    height: 32,
                     child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
                       onTap: () => _showSetTypeSelector(exercise, index, set),
                       child: Center(
                         child: _buildSetTypeBadge(index, set, set.isCompleted, isAnyPR),
@@ -770,6 +780,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                         style: TextButton.styleFrom(
                           backgroundColor: set.rpe != null ? Colors.blue.withOpacity(0.15) : Colors.grey.withOpacity(0.15),
                           padding: EdgeInsets.zero,
+                          tapTargetSize: MaterialTapTargetSize.padded,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
                         ),
                         onPressed: () => _showRpeSelector(exercise, index, set),

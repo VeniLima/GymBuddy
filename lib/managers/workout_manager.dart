@@ -34,6 +34,10 @@ class WorkoutManager extends ChangeNotifier {
   Map<int, int>? routineOriginalSets;
 
   int secondsElapsed = 0;
+  /// Ticks every second independently of [notifyListeners], so widgets that
+  /// only need the elapsed time (e.g. the digital clock) can listen to this
+  /// instead of rebuilding on every ChangeNotifier notification.
+  final ValueNotifier<int> secondsElapsedNotifier = ValueNotifier(0);
   Timer? _workoutTimer;
 
   final Map<int, int> exerciseRestTimes = {};
@@ -44,6 +48,10 @@ class WorkoutManager extends ChangeNotifier {
   Timer? _restTimer;
   Timer? _autoDismissTimer;
   int restSecondsRemaining = 0;
+  /// Same idea as [secondsElapsedNotifier]: the per-second rest countdown
+  /// updates this instead of calling [notifyListeners], so resting doesn't
+  /// rebuild the whole screen every second.
+  final ValueNotifier<int> restSecondsRemainingNotifier = ValueNotifier(0);
   bool isResting = false;
   final AudioPlayer audioPlayer = AudioPlayer();
 
@@ -62,7 +70,9 @@ class WorkoutManager extends ChangeNotifier {
     workoutExercises.clear();
     exerciseRestTimes.clear();
     secondsElapsed = 0;
+    secondsElapsedNotifier.value = 0;
     restSecondsRemaining = 0;
+    restSecondsRemainingNotifier.value = 0;
     isResting = false;
     _restTimer?.cancel();
 
@@ -97,7 +107,7 @@ class WorkoutManager extends ChangeNotifier {
     _workoutTimer?.cancel();
     _workoutTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       secondsElapsed++;
-      notifyListeners();
+      secondsElapsedNotifier.value = secondsElapsed;
     });
 
     notifyListeners();
@@ -105,10 +115,12 @@ class WorkoutManager extends ChangeNotifier {
 
   Future<void> loadExercises() async {
     final exercises = await DatabaseHelper.instance.getExercises();
+    final maxStats = await DatabaseHelper.instance.getExerciseMaxStats();
+    final lastSets = await DatabaseHelper.instance.getLastWorkoutSetsForAllExercises();
     for (var ex in exercises) {
-      exerciseHistoricalMax[ex.id!] = await DatabaseHelper.instance.getMaxWeightForExercise(ex.id!);
-      exerciseHistoricalMaxVolume[ex.id!] = await DatabaseHelper.instance.getMaxVolumeForExercise(ex.id!);
-      exercisePreviousSets[ex.id!] = await DatabaseHelper.instance.getLastWorkoutSetsForExercise(ex.id!);
+      exerciseHistoricalMax[ex.id!] = maxStats[ex.id!]?['maxWeight'] ?? 0.0;
+      exerciseHistoricalMaxVolume[ex.id!] = maxStats[ex.id!]?['maxVolume'] ?? 0.0;
+      exercisePreviousSets[ex.id!] = lastSets[ex.id!] ?? [];
     }
     availableExercises = exercises;
     notifyListeners();
@@ -287,12 +299,13 @@ class WorkoutManager extends ChangeNotifier {
   void startRestTimer(int seconds, {String? exerciseName}) {
     isResting = true;
     restSecondsRemaining = seconds;
+    restSecondsRemainingNotifier.value = seconds;
     _restTimer?.cancel();
     _restTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (restSecondsRemaining > 0) {
         restSecondsRemaining--;
+        restSecondsRemainingNotifier.value = restSecondsRemaining;
         NotificationManager.instance.showWorkoutNotification(workoutName, secondsElapsed, restTime: restSecondsRemaining);
-        notifyListeners();
       } else {
         _playBeep();
         timer.cancel();
@@ -304,6 +317,7 @@ class WorkoutManager extends ChangeNotifier {
 
   void addRestTime(int seconds) {
     restSecondsRemaining += seconds;
+    restSecondsRemainingNotifier.value = restSecondsRemaining;
     notifyListeners();
   }
 
@@ -313,6 +327,7 @@ class WorkoutManager extends ChangeNotifier {
     } else {
       restSecondsRemaining = 0;
     }
+    restSecondsRemainingNotifier.value = restSecondsRemaining;
     notifyListeners();
   }
 

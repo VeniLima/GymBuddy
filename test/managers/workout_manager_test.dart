@@ -45,6 +45,8 @@ void main() {
     when(() => mockDb.getMaxWeightForExercise(any())).thenAnswer((_) async => 0.0);
     when(() => mockDb.getMaxVolumeForExercise(any())).thenAnswer((_) async => 0.0);
     when(() => mockDb.getLastWorkoutSetsForExercise(any())).thenAnswer((_) async => []);
+    when(() => mockDb.getExerciseMaxStats()).thenAnswer((_) async => {});
+    when(() => mockDb.getLastWorkoutSetsForAllExercises()).thenAnswer((_) async => {});
     when(() => mockNotifications.showWorkoutNotification(any(), any(), restTime: any(named: 'restTime')))
         .thenAnswer((_) async => null);
     when(() => mockNotifications.hideWorkoutNotification()).thenAnswer((_) async => null);

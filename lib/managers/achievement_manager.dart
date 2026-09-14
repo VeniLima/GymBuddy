@@ -94,16 +94,7 @@ class AchievementManager {
 
     // 5. Cardio 5h
     if (!unlockedIds.contains('cardio_5h')) {
-      final allWorkouts = await db.getAllWorkoutsOrderedByDate();
-      int totalCardioSeconds = 0;
-      for (var w in allWorkouts) {
-        final wSets = await db.getSetsForWorkout(w.id!);
-        for (var s in wSets) {
-          if (s.durationSeconds != null && s.isCompleted) {
-            totalCardioSeconds += s.durationSeconds!;
-          }
-        }
-      }
+      final totalCardioSeconds = await db.getTotalCompletedCardioSeconds();
       if (totalCardioSeconds >= 5 * 3600) {
         await _unlock('cardio_5h', newlyUnlocked);
       }

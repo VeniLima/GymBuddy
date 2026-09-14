@@ -138,6 +138,48 @@ void main() {
       expect(lastSets[1].weight, 150.0);
     });
 
+    test('getExerciseMaxStats and getLastWorkoutSetsForAllExercises aggregate correctly across exercises', () async {
+      final exercises = await dbHelper.getExercises();
+      final ex1 = exercises[0];
+      final ex2 = exercises[1];
+
+      final workoutA = await dbHelper.insertWorkout(Workout(name: 'A', startTime: DateTime.now()));
+      await dbHelper.insertWorkoutSet(WorkoutSet(workoutId: workoutA.id, exerciseId: ex1.id!, reps: 5, weight: 80, isCompleted: true));
+      await dbHelper.insertWorkoutSet(WorkoutSet(workoutId: workoutA.id, exerciseId: ex2.id!, reps: 5, weight: 60, isCompleted: true));
+
+      final workoutB = await dbHelper.insertWorkout(Workout(name: 'B', startTime: DateTime.now()));
+      await dbHelper.insertWorkoutSet(WorkoutSet(workoutId: workoutB.id, exerciseId: ex1.id!, reps: 5, weight: 100, isCompleted: true));
+      await dbHelper.insertWorkoutSet(WorkoutSet(workoutId: workoutB.id, exerciseId: ex1.id!, reps: 5, weight: 90, isCompleted: true));
+      await dbHelper.insertWorkoutSet(WorkoutSet(workoutId: workoutB.id, exerciseId: ex1.id!, reps: 1, weight: 999, isCompleted: false));
+      await dbHelper.insertWorkoutSet(WorkoutSet(workoutId: workoutB.id, exerciseId: ex2.id!, reps: 5, weight: 50, isCompleted: true));
+
+      final stats = await dbHelper.getExerciseMaxStats();
+      expect(stats[ex1.id!]?['maxWeight'], 100.0);
+      expect(stats[ex1.id!]?['maxVolume'], 500.0);
+      expect(stats[ex2.id!]?['maxWeight'], 60.0);
+      expect(stats[ex2.id!]?['maxVolume'], 300.0);
+
+      final lastSets = await dbHelper.getLastWorkoutSetsForAllExercises();
+      expect(lastSets[ex1.id!]!.length, 2, reason: 'the not-completed 999kg set must be excluded');
+      expect(lastSets[ex1.id!]!.map((s) => s.weight).toList(), [100.0, 90.0]);
+      expect(lastSets[ex2.id!]!.length, 1);
+      expect(lastSets[ex2.id!]!.first.weight, 50.0);
+    });
+
+    test('getTotalCompletedCardioSeconds sums only completed sets with a duration', () async {
+      final exercises = await dbHelper.getExercises();
+      final ex = exercises[0];
+      final workout = await dbHelper.insertWorkout(Workout(name: 'Cardio Day', startTime: DateTime.now()));
+
+      await dbHelper.insertWorkoutSet(WorkoutSet(workoutId: workout.id, exerciseId: ex.id!, reps: 1, weight: 0, durationSeconds: 600, isCompleted: true));
+      await dbHelper.insertWorkoutSet(WorkoutSet(workoutId: workout.id, exerciseId: ex.id!, reps: 1, weight: 0, durationSeconds: 300, isCompleted: true));
+      await dbHelper.insertWorkoutSet(WorkoutSet(workoutId: workout.id, exerciseId: ex.id!, reps: 1, weight: 0, durationSeconds: 9999, isCompleted: false));
+      await dbHelper.insertWorkoutSet(WorkoutSet(workoutId: workout.id, exerciseId: ex.id!, reps: 5, weight: 50, isCompleted: true));
+
+      final total = await dbHelper.getTotalCompletedCardioSeconds();
+      expect(total, 900);
+    });
+
     test('CRUD Body Measurements', () async {
       // Insert
       final id1 = await dbHelper.insertBodyMeasurement('prof_arm', 40.5);

@@ -64,6 +64,8 @@ void main() {
     when(() => mockDb.getMaxWeightForExercise(any())).thenAnswer((_) async => 0.0);
     when(() => mockDb.getMaxVolumeForExercise(any())).thenAnswer((_) async => 0.0);
     when(() => mockDb.getLastWorkoutSetsForExercise(any())).thenAnswer((_) async => []);
+    when(() => mockDb.getExerciseMaxStats()).thenAnswer((_) async => {});
+    when(() => mockDb.getLastWorkoutSetsForAllExercises()).thenAnswer((_) async => {});
 
     await tester.pumpWidget(createTestableWidget());
     await tester.pumpAndSettle();
