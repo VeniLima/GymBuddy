@@ -7,7 +7,6 @@ import 'package:gymbuddy/screens/create_routine_screen.dart';
 import 'package:gymbuddy/models/exercise.dart';
 import 'package:gymbuddy/models/routine.dart';
 import 'package:gymbuddy/db/database_helper.dart';
-import 'package:gymbuddy/managers/translation_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class MockDatabaseHelper extends Mock implements DatabaseHelper {}

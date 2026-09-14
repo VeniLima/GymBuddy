@@ -6,8 +6,6 @@ import '../models/workout.dart';
 import '../models/workout_set.dart';
 import '../db/database_helper.dart';
 import 'notification_manager.dart';
-import 'translation_manager.dart';
-import 'cardio_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class WorkoutResult {

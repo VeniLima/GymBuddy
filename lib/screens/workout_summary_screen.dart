@@ -28,8 +28,6 @@ class WorkoutSummaryScreen extends StatefulWidget {
 }
 
 class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
-  int _totalWorkouts = 0;
-  int _workoutsLast7Days = 0;
   List<Workout> _history = [];
 
   final PageController _pageController = PageController();
@@ -51,8 +49,6 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
   }
 
   Future<void> _loadMetrics() async {
-    final total = await DatabaseHelper.instance.getTotalWorkoutsCount();
-    final last7 = await DatabaseHelper.instance.getWorkoutsLast7Days();
     final history = await DatabaseHelper.instance.getAllWorkoutsOrderedByDate();
     final exercises = await DatabaseHelper.instance.getExercises();
 
@@ -64,8 +60,6 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
     }
 
     setState(() {
-      _totalWorkouts = total;
-      _workoutsLast7Days = last7;
       _history = history;
       _exerciseMuscles = muscles;
       _exercisesMap = exMap;

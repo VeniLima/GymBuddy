@@ -4,7 +4,6 @@ import 'package:intl/intl.dart';
 import '../models/exercise.dart';
 import '../db/database_helper.dart';
 import '../managers/translation_manager.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class SetPerformance {
   final int id;

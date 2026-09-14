@@ -11,8 +11,8 @@ import '../db/database_helper.dart';
 import '../models/exercise.dart';
 import '../models/achievement.dart';
 import '../managers/translation_manager.dart';
-import '../managers/cardio_utils.dart';
 import '../managers/achievement_manager.dart';
+import '../managers/csv_utils.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -653,8 +653,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       
       for (var row in history) {
         final date = row['date'] ?? '';
-        final workoutName = '"${(row['workoutName'] ?? '').replaceAll('"', '""')}"';
-        final exerciseName = '"${(row['exerciseName'] ?? '').replaceAll('"', '""')}"';
+        final workoutName = sanitizeCsvField(row['workoutName'] ?? '');
+        final exerciseName = sanitizeCsvField(row['exerciseName'] ?? '');
         final setType = row['setType'] ?? '';
         final weight = row['weight'] ?? 0.0;
         final reps = row['reps'] ?? 0;

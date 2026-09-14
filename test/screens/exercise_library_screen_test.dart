@@ -6,7 +6,6 @@ import 'package:mocktail/mocktail.dart';
 import 'package:gymbuddy/screens/exercise_library_screen.dart';
 import 'package:gymbuddy/screens/exercise_library_detail_screen.dart';
 import 'package:gymbuddy/db/database_helper.dart';
-import 'package:gymbuddy/models/exercise.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class MockDatabaseHelper extends Mock implements DatabaseHelper {}

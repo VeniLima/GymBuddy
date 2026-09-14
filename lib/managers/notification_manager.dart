@@ -1,6 +1,5 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/material.dart';
-import 'package:meta/meta.dart';
 
 class NotificationManager {
   static NotificationManager _instance = NotificationManager._();
@@ -33,16 +32,16 @@ class NotificationManager {
       macOS: initializationSettingsDarwin,
     );
 
-    await _plugin.initialize(initializationSettings);
+    await _plugin.initialize(settings: initializationSettings);
 
     // Solicitar permissão no Android 13+
     await _plugin
         .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
         ?.requestNotificationsPermission();
 
-    // Solicitar permissão no iOS / macOS
+    // Solicitar permissão no macOS
     await _plugin
-        .resolvePlatformSpecificImplementation<DarwinFlutterLocalNotificationsPlugin>()
+        .resolvePlatformSpecificImplementation<MacOSFlutterLocalNotificationsPlugin>()
         ?.requestPermissions(
           alert: true,
           badge: true,
@@ -94,15 +93,15 @@ class NotificationManager {
     );
 
     await _plugin.show(
-      0,
-      'Treino em Andamento',
-      body,
-      details,
+      id: 0,
+      title: 'Treino em Andamento',
+      body: body,
+      notificationDetails: details,
     );
   }
 
   Future<void> hideWorkoutNotification() async {
-    await _plugin.cancel(0);
+    await _plugin.cancel(id: 0);
   }
 
   Future<void> showRestCompleteNotification({
@@ -133,10 +132,10 @@ class NotificationManager {
     );
 
     await _plugin.show(
-      1, 
-      title,
-      body,
-      details,
+      id: 1,
+      title: title,
+      body: body,
+      notificationDetails: details,
     );
   }
 }

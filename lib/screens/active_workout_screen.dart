@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/exercise.dart';
 import '../models/workout.dart';
@@ -814,39 +816,46 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                           }
                         }
 
+                        // Lê os recordes históricos ANTES de togglear a conclusão do set:
+                        // WorkoutManager.toggleSetCompletion() já atualiza
+                        // exerciseHistoricalMax/Volume internamente (via _checkPRs), então
+                        // checar depois do toggle faria essa comparação nunca ser verdadeira.
+                        bool brokeWeight = false;
+                        bool brokeVolume = false;
+                        double currentSetWeight = set.weight;
+                        double currentSetVolume = set.weight * set.reps;
+                        if (!set.isCompleted && !isCardio) {
+                          brokeWeight = currentSetWeight > 0 && currentSetWeight > (wm.exerciseHistoricalMax[exercise.id!] ?? 0.0);
+                          brokeVolume = currentSetVolume > 0 && currentSetVolume > (wm.exerciseHistoricalMaxVolume[exercise.id!] ?? 0.0);
+                        }
+
                         wm.toggleSetCompletion(exercise, index);
-                        
-                        if (!set.isCompleted && !isCardio) { 
-                          double currentSetWeight = set.weight;
-                          double currentSetVolume = set.weight * set.reps;
-                          
-                          bool brokeWeight = currentSetWeight > 0 && currentSetWeight > (wm.exerciseHistoricalMax[exercise.id!] ?? 0.0);
-                          bool brokeVolume = currentSetVolume > 0 && currentSetVolume > (wm.exerciseHistoricalMaxVolume[exercise.id!] ?? 0.0);
-                          
-                          if (brokeWeight || brokeVolume) {
-                            String msg = brokeWeight && brokeVolume
-                                ? (isPt ? 'Novo Recorde Pessoal Duplo! Carga (${currentSetWeight}kg) e Volume (${currentSetVolume}kg)!' : 'New Double PR! Weight (${currentSetWeight}kg) and Volume (${currentSetVolume}kg)!')
-                                : brokeWeight
-                                    ? (isPt ? 'Novo Recorde de Carga! ${currentSetWeight}kg!' : 'New Weight PR! ${currentSetWeight}kg!')
-                                    : (isPt ? 'Novo Recorde de Volume! ${currentSetVolume}kg (${set.weight}x${set.reps})!' : 'New Volume PR! ${currentSetVolume}kg (${set.weight}x${set.reps})!');
-                            
-                            ScaffoldMessenger.of(context).clearSnackBars();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Row(
-                                  children: [
-                                    SvgPicture.asset('assets/crown.svg', width: 24, height: 24, colorFilter: const ColorFilter.mode(Colors.amber, BlendMode.srcIn)),
-                                    const SizedBox(width: 12),
-                                    Expanded(child: Text(msg, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white))),
-                                  ],
-                                ),
-                                behavior: SnackBarBehavior.floating,
-                                backgroundColor: Colors.grey.shade900,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: const BorderSide(color: Colors.amber, width: 1)),
-                                duration: const Duration(seconds: 3),
-                              )
-                            );
-                          }
+
+                        if (brokeWeight || brokeVolume) {
+                          HapticFeedback.mediumImpact();
+                          wm.audioPlayer.play(AssetSource('beep.wav'));
+                          String msg = brokeWeight && brokeVolume
+                              ? (isPt ? 'Novo Recorde Pessoal Duplo! Carga (${currentSetWeight}kg) e Volume (${currentSetVolume}kg)!' : 'New Double PR! Weight (${currentSetWeight}kg) and Volume (${currentSetVolume}kg)!')
+                              : brokeWeight
+                                  ? (isPt ? 'Novo Recorde de Carga! ${currentSetWeight}kg!' : 'New Weight PR! ${currentSetWeight}kg!')
+                                  : (isPt ? 'Novo Recorde de Volume! ${currentSetVolume}kg (${set.weight}x${set.reps})!' : 'New Volume PR! ${currentSetVolume}kg (${set.weight}x${set.reps})!');
+
+                          ScaffoldMessenger.of(context).clearSnackBars();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Row(
+                                children: [
+                                  SvgPicture.asset('assets/crown.svg', width: 24, height: 24, colorFilter: const ColorFilter.mode(Colors.amber, BlendMode.srcIn)),
+                                  const SizedBox(width: 12),
+                                  Expanded(child: Text(msg, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white))),
+                                ],
+                              ),
+                              behavior: SnackBarBehavior.floating,
+                              backgroundColor: Colors.grey.shade900,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: const BorderSide(color: Colors.amber, width: 1)),
+                              duration: const Duration(seconds: 3),
+                            )
+                          );
                         }
                       },
                     ),

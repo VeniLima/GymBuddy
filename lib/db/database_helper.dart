@@ -1,4 +1,4 @@
-import 'package:meta/meta.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:async';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
@@ -28,9 +28,10 @@ class DatabaseHelper {
   Future<void> initTestDatabase() async {
     _database = await openDatabase(
       inMemoryDatabasePath,
-      version: 16,
+      version: 17,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
+      onConfigure: _onConfigure,
     );
   }
 
@@ -40,10 +41,39 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 16,
+      version: 17,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
+      onConfigure: _onConfigure,
     );
+  }
+
+  Future<void> _onConfigure(Database db) async {
+    await db.execute('PRAGMA foreign_keys = ON');
+  }
+
+  /// Adds [column] to [table] if it doesn't already exist, instead of relying
+  /// on a swallowed exception from a duplicate ALTER TABLE to detect that.
+  Future<void> _addColumnIfNotExists(
+    Database db,
+    String table,
+    String column,
+    String definition,
+  ) async {
+    final columns = await db.rawQuery('PRAGMA table_info($table)');
+    final exists = columns.any((c) => c['name'] == column);
+    if (exists) return;
+    try {
+      await db.execute('ALTER TABLE $table ADD COLUMN $column $definition');
+    } catch (e) {
+      debugPrint('DatabaseHelper: failed to add column $column to $table: $e');
+    }
+  }
+
+  Future<void> _createIndexes(Database db) async {
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_workout_sets_exercise ON workout_sets(exerciseId, isCompleted)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_workout_sets_workout ON workout_sets(workoutId)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_workouts_start_time ON workouts(startTime)');
   }
 
   Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
@@ -59,9 +89,7 @@ CREATE TABLE routine_exercises (
 ''');
     }
     if (oldVersion < 3) {
-      try {
-        await db.execute('ALTER TABLE routine_exercises ADD COLUMN targetSets INTEGER DEFAULT 1');
-      } catch (e) {}
+      await _addColumnIfNotExists(db, 'routine_exercises', 'targetSets', 'INTEGER DEFAULT 1');
     }
     if (oldVersion < 4) {
       await db.execute('''
@@ -137,59 +165,41 @@ CREATE TABLE weight_logs (
       }
     }
     if (oldVersion < 7) {
-      try {
-        await db.execute('ALTER TABLE workouts ADD COLUMN notes TEXT DEFAULT ""');
-      } catch (e) {}
+      await _addColumnIfNotExists(db, 'workouts', 'notes', 'TEXT DEFAULT ""');
     }
     if (oldVersion < 8) {
-      try {
-        await db.execute('ALTER TABLE workouts ADD COLUMN recordsBroken INTEGER DEFAULT 0');  
-      } catch (e) {}
+      await _addColumnIfNotExists(db, 'workouts', 'recordsBroken', 'INTEGER DEFAULT 0');
     }
     if (oldVersion < 9) {
-      try {
-        await db.execute('ALTER TABLE workout_sets ADD COLUMN rpe REAL');
-      } catch (e) {}
+      await _addColumnIfNotExists(db, 'workout_sets', 'rpe', 'REAL');
     }
     if (oldVersion < 10) {
-      try {
-        await db.execute('ALTER TABLE exercises ADD COLUMN restTimeSeconds INTEGER');
-      } catch (e) {}
+      await _addColumnIfNotExists(db, 'exercises', 'restTimeSeconds', 'INTEGER');
     }
     if (oldVersion < 11) {
-      try {
-        await db.execute('ALTER TABLE exercises ADD COLUMN notes TEXT');
-      } catch (e) {}
+      await _addColumnIfNotExists(db, 'exercises', 'notes', 'TEXT');
     }
     if (oldVersion < 12) {
-      try {
-        await db.execute('ALTER TABLE exercises ADD COLUMN libraryId TEXT');
-        await db.execute('ALTER TABLE exercises ADD COLUMN category TEXT');
-        await db.execute('ALTER TABLE exercises ADD COLUMN level TEXT');
-        await db.execute('ALTER TABLE exercises ADD COLUMN equipment TEXT');
-        await db.execute('ALTER TABLE exercises ADD COLUMN mechanic TEXT');
-        await db.execute('ALTER TABLE exercises ADD COLUMN force TEXT');
-        await db.execute('ALTER TABLE exercises ADD COLUMN imagePath TEXT');
-        await db.execute('ALTER TABLE exercises ADD COLUMN instructionsJson TEXT');
-      } catch (e) {}
+      await _addColumnIfNotExists(db, 'exercises', 'libraryId', 'TEXT');
+      await _addColumnIfNotExists(db, 'exercises', 'category', 'TEXT');
+      await _addColumnIfNotExists(db, 'exercises', 'level', 'TEXT');
+      await _addColumnIfNotExists(db, 'exercises', 'equipment', 'TEXT');
+      await _addColumnIfNotExists(db, 'exercises', 'mechanic', 'TEXT');
+      await _addColumnIfNotExists(db, 'exercises', 'force', 'TEXT');
+      await _addColumnIfNotExists(db, 'exercises', 'imagePath', 'TEXT');
+      await _addColumnIfNotExists(db, 'exercises', 'instructionsJson', 'TEXT');
     }
     if (oldVersion < 13) {
-      try {
-        await db.execute('ALTER TABLE workout_sets ADD COLUMN durationSeconds INTEGER');
-        await db.execute('ALTER TABLE workout_sets ADD COLUMN distance REAL');
-        await db.execute('ALTER TABLE workout_sets ADD COLUMN previousDurationSeconds INTEGER');
-        await db.execute('ALTER TABLE workout_sets ADD COLUMN previousDistance REAL');
-      } catch (e) {}
+      await _addColumnIfNotExists(db, 'workout_sets', 'durationSeconds', 'INTEGER');
+      await _addColumnIfNotExists(db, 'workout_sets', 'distance', 'REAL');
+      await _addColumnIfNotExists(db, 'workout_sets', 'previousDurationSeconds', 'INTEGER');
+      await _addColumnIfNotExists(db, 'workout_sets', 'previousDistance', 'REAL');
     }
     if (oldVersion < 14) {
-      try {
-        await db.execute('ALTER TABLE routine_exercises ADD COLUMN superSetId TEXT');
-      } catch (e) {}
+      await _addColumnIfNotExists(db, 'routine_exercises', 'superSetId', 'TEXT');
     }
     if (oldVersion < 15) {
-      try {
-        await db.execute('ALTER TABLE workouts ADD COLUMN muscleGroups TEXT');
-      } catch (e) {}
+      await _addColumnIfNotExists(db, 'workouts', 'muscleGroups', 'TEXT');
     }
     if (oldVersion < 16) {
       await db.execute('''
@@ -200,6 +210,9 @@ CREATE TABLE body_measurements (
   value REAL NOT NULL
 )
 ''');
+    }
+    if (oldVersion < 17) {
+      await _createIndexes(db);
     }
   }
 
@@ -339,6 +352,8 @@ CREATE TABLE body_measurements (
   value $doubleType
 )
 ''');
+
+    await _createIndexes(db);
   }
 
   // --- CRUD Exercises ---

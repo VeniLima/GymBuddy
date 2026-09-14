@@ -19,8 +19,7 @@ class _CreateRoutineScreenState extends State<CreateRoutineScreen> {
   final List<Exercise> _selectedExercises = [];
   final Map<int, int> _selectedExerciseSets = {};
   final Map<int, String?> _selectedExerciseSuperSets = {};
-  List<Exercise> _availableExercises = [];
-  
+
   final Set<int> _multiSelect = {};
   bool _isMultiSelectMode = false;
 
@@ -40,11 +39,6 @@ class _CreateRoutineScreenState extends State<CreateRoutineScreen> {
   }
 
   Future<void> _loadExercisesAndRoutine() async {
-    final exercises = await DatabaseHelper.instance.getExercises();
-    setState(() {
-      _availableExercises = exercises;
-    });
-
     if (widget.routine != null && widget.routine!.id != null) {
       final routineId = widget.routine!.id!;
       final routineExercises = await DatabaseHelper.instance.getExercisesForRoutine(routineId);

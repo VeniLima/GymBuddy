@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:gymbuddy/db/database_helper.dart';
 import 'package:gymbuddy/models/exercise.dart';
@@ -155,6 +156,45 @@ void main() {
       final listAfterDelete = await dbHelper.getBodyMeasurements();
       expect(listAfterDelete.any((m) => m['id'] == id1), false);
       expect(listAfterDelete.any((m) => m['id'] == id2), true);
+    });
+
+    test('Foreign keys enforcement is enabled', () async {
+      final db = await dbHelper.database;
+      final result = await db.rawQuery('PRAGMA foreign_keys');
+      expect(Sqflite.firstIntValue(result), 1);
+    });
+
+    test('Performance indexes exist on workout_sets and workouts', () async {
+      final db = await dbHelper.database;
+      final indexes = await db.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type = 'index'",
+      );
+      final indexNames = indexes.map((i) => i['name']).toSet();
+      expect(indexNames, contains('idx_workout_sets_exercise'));
+      expect(indexNames, contains('idx_workout_sets_workout'));
+      expect(indexNames, contains('idx_workouts_start_time'));
+    });
+
+    test('Deleting an exercise cascades to its workout sets', () async {
+      final ex = await dbHelper.insertExercise(
+        Exercise(name: 'Cascade Test Exercise', muscleGroup: 'Chest'),
+      );
+      final workout = await dbHelper.insertWorkout(
+        Workout(name: 'Cascade Test Workout', startTime: DateTime.now()),
+      );
+      final set = await dbHelper.insertWorkoutSet(WorkoutSet(
+        workoutId: workout.id,
+        exerciseId: ex.id!,
+        reps: 10,
+        weight: 50.0,
+        isCompleted: true,
+      ));
+
+      await dbHelper.deleteExercise(ex.id!);
+
+      final db = await dbHelper.database;
+      final remaining = await db.query('workout_sets', where: 'id = ?', whereArgs: [set.id]);
+      expect(remaining, isEmpty, reason: 'ON DELETE CASCADE should remove sets of a deleted exercise once foreign_keys is enforced');
     });
   });
 }

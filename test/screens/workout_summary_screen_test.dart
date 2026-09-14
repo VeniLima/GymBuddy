@@ -4,7 +4,6 @@ import 'package:mocktail/mocktail.dart';
 import 'package:gymbuddy/screens/workout_summary_screen.dart';
 import 'package:gymbuddy/models/workout.dart';
 import 'package:gymbuddy/models/workout_set.dart';
-import 'package:gymbuddy/models/exercise.dart';
 import 'package:gymbuddy/db/database_helper.dart';
 import 'package:gymbuddy/managers/translation_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';

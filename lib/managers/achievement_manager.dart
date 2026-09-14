@@ -3,7 +3,6 @@ import '../db/database_helper.dart';
 import '../models/achievement.dart';
 import '../models/workout_set.dart';
 import '../models/workout.dart';
-import '../models/exercise.dart';
 
 class AchievementManager {
   static final AchievementManager instance = AchievementManager._();
