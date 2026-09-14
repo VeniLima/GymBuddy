@@ -106,8 +106,41 @@ void main() {
     await tester.tap(btn);
     await tester.pumpAndSettle();
 
-    // Should display SnackBar because history is empty
+    // The share-confirmation warning appears first...
+    expect(find.text('Compartilhar dados pessoais?'), findsOneWidget);
+    await tester.tap(find.text('Compartilhar'));
+    await tester.pumpAndSettle();
+
+    // ...then, since history is empty, the SnackBar.
     expect(find.text('Nenhum histórico de treino para exportar.'), findsOneWidget);
+  });
+
+  testWidgets('Tapping Export CSV shows a warning before sharing personal data', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(800, 1000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    SharedPreferences.setMockInitialValues({});
+    await TranslationManager.instance.setLanguage('pt');
+    when(() => mockDb.getRawWorkoutSetsHistory()).thenAnswer((_) async => []);
+
+    await tester.pumpWidget(createTestableWidget());
+    await tester.pumpAndSettle();
+
+    clearInteractions(mockDb);
+
+    await tester.tap(find.text('Exportar CSV'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Compartilhar dados pessoais?'), findsOneWidget);
+
+    // Cancelling must not proceed to the export flow at all.
+    await tester.tap(find.text('Cancelar'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Nenhum histórico de treino para exportar.'), findsNothing);
+    verifyNever(() => mockDb.getRawWorkoutSetsHistory());
   });
 
   testWidgets('Tapping Restore prompts a confirmation dialog', (WidgetTester tester) async {

@@ -636,8 +636,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  /// Shows a warning before an unencrypted export (CSV/JSON) leaves the
+  /// app's sandbox via the share sheet — these files carry health data
+  /// (weight, body measurements, workout history) in plain text.
+  Future<bool> _confirmShareSensitiveData() async {
+    final isPt = tm.currentLanguage == 'pt';
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E1E),
+        title: Text(
+          isPt ? 'Compartilhar dados pessoais?' : 'Share personal data?',
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          isPt
+              ? 'Este arquivo contém dados pessoais (peso, medidas corporais e histórico de treino) sem criptografia. Qualquer pessoa com acesso ao arquivo poderá lê-lo. Deseja continuar?'
+              : 'This file contains personal data (weight, body measurements and workout history) with no encryption. Anyone with access to the file will be able to read it. Do you want to continue?',
+          style: const TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(isPt ? 'Cancelar' : 'Cancel', style: const TextStyle(color: Colors.grey)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(isPt ? 'Compartilhar' : 'Share', style: const TextStyle(color: Colors.blue)),
+          ),
+        ],
+      ),
+    );
+    return confirm == true;
+  }
+
   Future<void> _exportWorkoutHistoryCSV() async {
     final isPt = tm.currentLanguage == 'pt';
+    if (!await _confirmShareSensitiveData()) return;
     try {
       final history = await DatabaseHelper.instance.getRawWorkoutSetsHistory();
       if (history.isEmpty) {
@@ -685,6 +720,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _exportBackupJSON() async {
     final isPt = tm.currentLanguage == 'pt';
+    if (!await _confirmShareSensitiveData()) return;
     try {
       final backupData = await DatabaseHelper.instance.exportToMap();
       final jsonString = jsonEncode(backupData);
