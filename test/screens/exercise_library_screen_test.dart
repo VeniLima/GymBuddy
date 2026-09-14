@@ -39,6 +39,17 @@ class MockAssetBundle extends CachingAssetBundle {
           "level": "intermediate",
           "mechanic": "compound",
           "images": []
+        },
+        {
+          "name": "Hip Abduction (Machine)",
+          "primaryMuscles": ["abductors"],
+          "force": "push",
+          "instructions": ["Step 1"],
+          "category": "strength",
+          "equipment": "machine",
+          "level": "beginner",
+          "mechanic": "isolation",
+          "images": []
         }
       ]);
     }
@@ -107,6 +118,40 @@ void main() {
 
     expect(find.text('Supino Reto'), findsOneWidget);
     expect(find.text('Agachamento Livre'), findsNothing);
+  });
+
+  testWidgets('Filtering by Abdutores shows abductor exercises, distinct from Adutores', (WidgetTester tester) async {
+    when(() => mockDb.getExercises()).thenAnswer((_) async => []);
+
+    await tester.pumpWidget(createTestableWidget());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Todos Músculos'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Abdutores'), findsWidgets, reason: 'Abductors must be a selectable muscle filter');
+
+    await tester.tap(find.text('Abdutores').last);
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Hip Abduction'), findsOneWidget);
+    expect(find.text('Supino Reto'), findsNothing);
+    expect(find.text('Agachamento Livre'), findsNothing);
+  });
+
+  testWidgets('Custom exercise dialog offers Abdutores as a translated muscle option', (WidgetTester tester) async {
+    when(() => mockDb.getExercises()).thenAnswer((_) async => []);
+
+    await tester.pumpWidget(createTestableWidget());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.add));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Peito')); // opens the muscle dropdown (default value)
+    await tester.pumpAndSettle();
+
+    expect(find.text('Abdutores'), findsWidgets);
   });
 
   testWidgets('Tapping an exercise should navigate to Detail screen', (WidgetTester tester) async {

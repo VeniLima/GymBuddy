@@ -54,6 +54,12 @@ void main() {
       expect(tm.translateMuscleGroup('Chest'), 'Chest');
     });
 
+    test('translateMuscleGroup() knows Abductors, distinct from Adductors', () async {
+      await tm.setLanguage('pt');
+      expect(tm.translateMuscleGroup('Abductors'), 'Abdutores');
+      expect(tm.translateMuscleGroup('Adductors'), 'Adutores');
+    });
+
     test('translateMuscleGroup() falls back to the original string for an unknown muscle', () async {
       await tm.setLanguage('pt');
       expect(tm.translateMuscleGroup('Forearms'), 'Forearms');

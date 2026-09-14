@@ -76,6 +76,7 @@ class TranslationManager extends ChangeNotifier {
     'Quadriceps': 'Quadríceps',
     'Hamstrings': 'Isquiotibiais',
     'Adductors': 'Adutores',
+    'Abductors': 'Abdutores',
     'Glutes': 'Glúteos',
     'Calves': 'Panturrilha',
     'Core': 'Abdômen',

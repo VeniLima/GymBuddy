@@ -114,6 +114,7 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen> with Sing
               else if (selected == 'quadriceps' && muscle.contains('quadriceps')) muscleMatch = true;
               else if (selected == 'hamstrings' && muscle.contains('hamstrings')) muscleMatch = true;
               else if (selected == 'adductors' && muscle.contains('adductors')) muscleMatch = true;
+              else if (selected == 'abductors' && muscle.contains('abductors')) muscleMatch = true;
               else if (selected == 'glutes' && muscle.contains('glutes')) muscleMatch = true;
               else if (selected == 'calves' && muscle.contains('calves')) muscleMatch = true;
               else if (selected == 'core' && muscle.contains('abdominals')) muscleMatch = true;
@@ -159,8 +160,8 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen> with Sing
     String selectedMuscle = 'Chest';
 
     final muscles = [
-      'Chest', 'Back', 'Shoulders', 'Biceps', 'Triceps', 
-      'Quadriceps', 'Hamstrings', 'Adductors', 'Glutes', 'Calves', 'Core'
+      'Chest', 'Back', 'Shoulders', 'Biceps', 'Triceps',
+      'Quadriceps', 'Hamstrings', 'Adductors', 'Abductors', 'Glutes', 'Calves', 'Core'
     ];
 
     showDialog(
@@ -180,7 +181,7 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen> with Sing
               DropdownButton<String>(
                 value: selectedMuscle,
                 isExpanded: true,
-                items: muscles.map((m) => DropdownMenuItem(value: m, child: Text(m))).toList(),
+                items: muscles.map((m) => DropdownMenuItem(value: m, child: Text(tm.translateMuscleGroup(m)))).toList(),
                 onChanged: (val) {
                   if (val != null) setDialogState(() => selectedMuscle = val);
                 },
@@ -228,6 +229,7 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen> with Sing
       'Quadriceps',
       'Hamstrings',
       'Adductors',
+      'Abductors',
       'Glutes',
       'Calves',
       'Core',
