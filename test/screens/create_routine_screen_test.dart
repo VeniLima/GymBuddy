@@ -72,15 +72,15 @@ void main() {
     await tester.tap(find.byType(ElevatedButton));
     await tester.pumpAndSettle();
 
-    // The picker list shows the name run through ExerciseTranslator (pt by
-    // default); once added to the routine it's shown via Exercise.translatedName
-    // instead, which uses TranslationManager's own dictionary.
+    // Both the picker and, once added, the routine's own list go through
+    // Exercise.translatedName / ExerciseTranslator now, so the name reads
+    // the same in both places.
     expect(find.text('Supino com Barra'), findsOneWidget);
     await tester.tap(find.text('Supino com Barra'));
     await tester.pumpAndSettle();
 
     // Verify it was added to the list
-    expect(find.text('Supino Reto (Barra)'), findsOneWidget);
+    expect(find.text('Supino com Barra'), findsOneWidget);
     expect(find.text('Nenhum exercício adicionado.'), findsNothing);
 
     // Remove it

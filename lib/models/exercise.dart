@@ -1,4 +1,5 @@
 import '../managers/translation_manager.dart';
+import '../managers/exercise_translator.dart';
 
 class Exercise {
   final int? id;
@@ -33,7 +34,13 @@ class Exercise {
     this.instructionsJson,
   });
 
-  String get translatedName => TranslationManager.instance.translate(name);
+  /// Uses the same translator as the exercise library picker
+  /// (ExerciseTranslator), instead of TranslationManager's separate,
+  /// much smaller exercise-name dictionary — so a name doesn't change
+  /// translation quality/behavior depending on whether it's being shown
+  /// before or after being added to a workout/routine.
+  String get translatedName =>
+      ExerciseTranslator.translateName(name, TranslationManager.instance.currentLanguage);
 
   bool get isMultiArticular {
     final lower = name.toLowerCase();

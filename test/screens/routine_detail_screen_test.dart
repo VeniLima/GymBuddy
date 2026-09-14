@@ -49,8 +49,8 @@ void main() {
     // Verify title and exercises display
     expect(find.text('Chest Day'), findsOneWidget);
     expect(find.text('Focus on bench press'), findsOneWidget);
-    expect(find.text('Supino Reto (Barra)'), findsOneWidget);
-    expect(find.text('Supino Inclinado (Barra)'), findsOneWidget);
+    expect(find.text('Supino com Barra'), findsOneWidget);
+    expect(find.text('Supino Inclinado com Barra'), findsOneWidget);
     expect(find.text('3 Séries'), findsOneWidget);
     expect(find.text('4 Séries'), findsOneWidget);
   });
