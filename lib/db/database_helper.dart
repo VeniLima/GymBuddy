@@ -28,7 +28,7 @@ class DatabaseHelper {
   Future<void> initTestDatabase() async {
     _database = await openDatabase(
       inMemoryDatabasePath,
-      version: 17,
+      version: 18,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
       onConfigure: _onConfigure,
@@ -41,7 +41,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 17,
+      version: 18,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
       onConfigure: _onConfigure,
@@ -214,6 +214,20 @@ CREATE TABLE body_measurements (
     if (oldVersion < 17) {
       await _createIndexes(db);
     }
+    if (oldVersion < 18) {
+      // AchievementManager has always read/written this table (see
+      // checkAchievements/getUnlockedAchievements), but it was never
+      // created by any migration — every call crashed with "no such
+      // table" on a real database, silently breaking the post-workout
+      // summary screen and the Profile screen's achievements section.
+      await db.execute('''
+CREATE TABLE unlocked_achievements (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  achievementId TEXT NOT NULL UNIQUE,
+  unlockedAt TEXT NOT NULL
+)
+''');
+    }
   }
 
   Future _createDB(Database db, int version) async {
@@ -350,6 +364,14 @@ CREATE TABLE body_measurements (
   date $textType,
   type $textType,
   value $doubleType
+)
+''');
+
+    await db.execute('''
+CREATE TABLE unlocked_achievements (
+  id $idType,
+  achievementId TEXT NOT NULL UNIQUE,
+  unlockedAt $textType
 )
 ''');
 

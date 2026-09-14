@@ -48,7 +48,14 @@ class AchievementManager {
 
   Future<List<Achievement>> checkAchievements(Workout workout, List<WorkoutSet> sets) async {
     final db = DatabaseHelper.instance;
-    final unlockedIds = (await getUnlockedAchievements()).map((a) => a.id).toSet();
+    // getUnlockedAchievements() returns every definition (locked and
+    // unlocked alike) for display purposes — filter to the ones actually
+    // unlocked, or every achievement below would look already-unlocked and
+    // never fire.
+    final unlockedIds = (await getUnlockedAchievements())
+        .where((a) => a.isUnlocked)
+        .map((a) => a.id)
+        .toSet();
     List<Achievement> newlyUnlocked = [];
 
     // 1. First Workout
