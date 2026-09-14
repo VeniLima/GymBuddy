@@ -9,6 +9,7 @@ import 'screens/onboarding_screen.dart';
 import 'managers/workout_manager.dart';
 import 'managers/notification_manager.dart';
 import 'managers/translation_manager.dart';
+import 'managers/workout_foreground_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,6 +17,7 @@ void main() async {
   await initializeDateFormatting('en', null);
   await NotificationManager.instance.init();
   await TranslationManager.instance.init();
+  WorkoutForegroundService.initialize();
   await WorkoutManager.instance.restoreDraftIfAny();
 
   final prefs = await SharedPreferences.getInstance();

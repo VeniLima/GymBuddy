@@ -29,6 +29,18 @@ void main() {
 
     const MethodChannel('xyz.luan/audioplayers').setMockMethodCallHandler((_) async => null);
     const MethodChannel('xyz.luan/audioplayers.global').setMockMethodCallHandler((_) async => null);
+
+    const MethodChannel('flutter_foreground_task/methods').setMockMethodCallHandler((call) async {
+      switch (call.method) {
+        case 'checkNotificationPermission':
+        case 'requestNotificationPermission':
+          return 0; // NotificationPermission.granted
+        case 'isRunningService':
+          return false;
+        default:
+          return null;
+      }
+    });
   });
 
   setUp(() async {

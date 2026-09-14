@@ -6,7 +6,7 @@ import '../models/exercise.dart';
 import '../models/workout.dart';
 import '../models/workout_set.dart';
 import '../db/database_helper.dart';
-import 'notification_manager.dart';
+import 'workout_foreground_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class WorkoutResult {
@@ -150,6 +150,8 @@ class WorkoutManager extends ChangeNotifier {
       });
 
       notifyListeners();
+      await WorkoutForegroundService.requestPermissions();
+      await WorkoutForegroundService.start(title: 'Treino em Andamento', body: workoutName);
       return true;
     } catch (e) {
       debugPrint('WorkoutManager: failed to restore workout draft: $e');
@@ -214,6 +216,8 @@ class WorkoutManager extends ChangeNotifier {
 
     notifyListeners();
     await _saveDraft();
+    await WorkoutForegroundService.requestPermissions();
+    await WorkoutForegroundService.start(title: 'Treino em Andamento', body: workoutName);
   }
 
   Future<void> loadExercises() async {
@@ -413,7 +417,7 @@ class WorkoutManager extends ChangeNotifier {
       if (restSecondsRemaining > 0) {
         restSecondsRemaining--;
         restSecondsRemainingNotifier.value = restSecondsRemaining;
-        NotificationManager.instance.showWorkoutNotification(workoutName, secondsElapsed, restTime: restSecondsRemaining);
+        _updateWorkoutNotification(restTime: restSecondsRemaining);
       } else {
         _playBeep();
         timer.cancel();
@@ -450,8 +454,18 @@ class WorkoutManager extends ChangeNotifier {
   void skipRestTimer() {
     _restTimer?.cancel();
     isResting = false;
-    NotificationManager.instance.showWorkoutNotification(workoutName, secondsElapsed);
+    _updateWorkoutNotification();
     notifyListeners();
+  }
+
+  void _updateWorkoutNotification({int? restTime}) {
+    String body = workoutName;
+    if (restTime != null && restTime > 0) {
+      final m = restTime ~/ 60;
+      final s = restTime % 60;
+      body += ' | Descanso: ${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+    }
+    WorkoutForegroundService.update(title: 'Treino em Andamento', body: body);
   }
 
   Future<void> _playBeep() async {
@@ -466,6 +480,7 @@ class WorkoutManager extends ChangeNotifier {
     workoutExercises.clear();
     notifyListeners();
     _clearDraft();
+    WorkoutForegroundService.stop();
   }
 
   double calculateVolume() {
@@ -553,10 +568,9 @@ class WorkoutManager extends ChangeNotifier {
         await DatabaseHelper.instance.insertWorkoutWithSets(workoutToSave, setsToSave);
 
     bool routineChanged = _hasRoutineChanged();
-    
-    cancelWorkout();
-    NotificationManager.instance.hideWorkoutNotification();
-    
+
+    cancelWorkout(); // also stops the foreground service and clears the draft
+
     return WorkoutResult(savedWorkout, completedSets, recordsBrokenCount, routineChanged);
   }
 
