@@ -573,6 +573,11 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Row(
               children: [
+                // Matches the superset-bar/spacer column that precedes the
+                // set-type badge in each data row below, so the fixed-width
+                // columns (weight/reps/RPE/check) actually line up with
+                // their headers instead of drifting ~16px to the right.
+                const SizedBox(width: 16),
                 SizedBox(width: 30, child: Text(tm.translate('act_set'), style: const TextStyle(color: Colors.grey, fontSize: 12))),
                 Expanded(child: Text(tm.translate('act_previous'), style: const TextStyle(color: Colors.grey, fontSize: 12))),
                 SizedBox(width: 60, child: Text(isCardio ? tm.translate('act_time') : tm.translate('act_weight'), style: const TextStyle(color: Colors.grey, fontSize: 12), textAlign: TextAlign.center)),
@@ -617,7 +622,10 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
 
             return Container(
               color: isAnyPR ? Colors.amber.withOpacity(0.15) : (set.isCompleted ? Colors.green.withOpacity(0.2) : Colors.transparent),
-              padding: const EdgeInsets.symmetric(vertical: 4.0),
+              // Container's color/decoration paints the full box regardless
+              // of padding, so the highlight still spans edge-to-edge; only
+              // the Row's content is inset to line up with the header above.
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
               child: Row(
                 children: [
                   if (isInSuperSet)
@@ -767,8 +775,12 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                       ),
                     ),
                   ],
+                  // Unconditional, matching the header's own gap between the
+                  // reps and RPE columns (fixes a ~12px drift between the
+                  // header and this row whenever RPE is disabled, since the
+                  // gap used to only exist inside the RPE-enabled branch).
+                  const SizedBox(width: 12),
                   if (!isCardio && _enableRpe) ...[
-                    const SizedBox(width: 12),
                     SizedBox(
                       width: 45,
                       height: 32,

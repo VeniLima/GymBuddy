@@ -203,4 +203,80 @@ void main() {
     await tester.pumpAndSettle();
     handle.dispose();
   });
+
+  testWidgets('Header columns (SÉRIE/KG/REPS) line up with the data row below them', (WidgetTester tester) async {
+    final manager = WorkoutManager.instance;
+    final exercise = Exercise(id: 1, name: 'Bench Press', muscleGroup: 'Chest');
+
+    manager.isActive = true;
+    manager.workoutExercises.clear();
+    manager.workoutExercises[exercise] = [
+      WorkoutSet(exerciseId: 1, reps: 10, weight: 60, isCompleted: false)
+    ];
+
+    await tester.pumpWidget(createTestableWidget());
+    await tester.pumpAndSettle();
+
+    // On a real device (reported on a Galaxy A14) the header row and the
+    // data row below it used different amounts of horizontal padding, so
+    // "SÉRIE"/"KG"/"REPS" visibly drifted ~16px away from the values they
+    // were supposed to label. The set-type badge is the data row's
+    // equivalent of the "SÉRIE" header column, and the weight input is the
+    // equivalent of the "KG" column — both must start at the same x as
+    // their header.
+    final serieHeaderX = tester.getTopLeft(find.text('SÉRIE')).dx;
+    final badgeX = tester.getTopLeft(find.bySemanticsLabel(RegExp('Tipo da série'))).dx;
+    expect(badgeX, closeTo(serieHeaderX, 0.5));
+
+    final weightHeaderX = tester.getTopLeft(find.text('KG')).dx;
+    // TextFormField #0 is the exercise-notes field above the table; #1 is
+    // the weight input for this set.
+    final weightInputX = tester.getTopLeft(find.byType(TextFormField).at(1)).dx;
+    expect(weightInputX, closeTo(weightHeaderX, 0.5));
+
+    // The checkmark column sits at the far right, after the RPE-or-spacer
+    // gap that used to only exist when RPE was enabled — this is the column
+    // that actually caught the regression (RPE disabled by default here).
+    final checkHeaderX = tester
+        .getTopLeft(find.byWidgetPredicate((w) => w is Icon && w.icon == Icons.check && w.size == 16))
+        .dx;
+    final checkButtonX = tester.getTopLeft(find.byTooltip('Concluir série')).dx;
+    expect(checkButtonX, closeTo(checkHeaderX, 0.5));
+
+    manager.cancelWorkout();
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('Header/data row alignment also holds with RPE enabled', (WidgetTester tester) async {
+    SharedPreferences.setMockInitialValues({
+      'user_enable_rest_timer': true,
+      'user_enable_rpe': true,
+    });
+    final manager = WorkoutManager.instance;
+    final exercise = Exercise(id: 1, name: 'Bench Press', muscleGroup: 'Chest');
+
+    manager.isActive = true;
+    manager.workoutExercises.clear();
+    manager.workoutExercises[exercise] = [
+      WorkoutSet(exerciseId: 1, reps: 10, weight: 60, isCompleted: false)
+    ];
+
+    await tester.pumpWidget(createTestableWidget());
+    await tester.pumpAndSettle();
+
+    final checkHeaderX = tester
+        .getTopLeft(find.byWidgetPredicate((w) => w is Icon && w.icon == Icons.check && w.size == 16))
+        .dx;
+    final checkButtonX = tester.getTopLeft(find.byTooltip('Concluir série')).dx;
+    expect(checkButtonX, closeTo(checkHeaderX, 0.5));
+
+    manager.cancelWorkout();
+    await tester.pumpAndSettle();
+
+    // Restore defaults for any test that runs after this one.
+    SharedPreferences.setMockInitialValues({
+      'user_enable_rest_timer': true,
+      'user_enable_rpe': false,
+    });
+  });
 }
