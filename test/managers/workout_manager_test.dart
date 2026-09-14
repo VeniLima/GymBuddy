@@ -24,6 +24,7 @@ void main() {
     registerFallbackValue(Exercise(name: '', muscleGroup: ''));
     registerFallbackValue(Workout(name: '', startTime: DateTime.now()));
     registerFallbackValue(WorkoutSet(exerciseId: 0, reps: 0, weight: 0));
+    registerFallbackValue(<WorkoutSet>[]);
     registerFallbackValue(Routine(name: '', description: ''));
 
     const MethodChannel('xyz.luan/audioplayers').setMockMethodCallHandler((_) async => null);
@@ -85,11 +86,36 @@ void main() {
     
     manager.updateSet(exercise, 0, WorkoutSet(exerciseId: 1, reps: 10, weight: 0, isCompleted: true));
     
-    when(() => mockDb.insertWorkout(any())).thenAnswer((invocation) async {
-      return Workout(id: 1, name: 'Test', startTime: DateTime.now());
-    });
-    when(() => mockDb.insertWorkoutSet(any())).thenAnswer((invocation) async {
-      return invocation.positionalArguments[0] as WorkoutSet;
+    when(() => mockDb.insertWorkoutWithSets(any(), any())).thenAnswer((invocation) async {
+      final workout = invocation.positionalArguments[0] as Workout;
+      final sets = invocation.positionalArguments[1] as List<WorkoutSet>;
+      final savedWorkout = Workout(
+        id: 1,
+        name: workout.name,
+        startTime: workout.startTime,
+        endTime: workout.endTime,
+        durationSeconds: workout.durationSeconds,
+        totalVolume: workout.totalVolume,
+        notes: workout.notes,
+        recordsBroken: workout.recordsBroken,
+      );
+      final savedSets = [
+        for (var i = 0; i < sets.length; i++)
+          WorkoutSet(
+            id: i + 1,
+            workoutId: 1,
+            exerciseId: sets[i].exerciseId,
+            reps: sets[i].reps,
+            weight: sets[i].weight,
+            durationSeconds: sets[i].durationSeconds,
+            distance: sets[i].distance,
+            setType: sets[i].setType,
+            isCompleted: sets[i].isCompleted,
+            rpe: sets[i].rpe,
+            superSetId: sets[i].superSetId,
+          ),
+      ];
+      return (savedWorkout, savedSets);
     });
     when(() => mockDb.getRoutines()).thenAnswer((_) async => []);
 
@@ -98,7 +124,6 @@ void main() {
     expect(result.workout.id, 1);
     expect(result.sets.length, 1);
     expect(manager.isActive, false);
-    verify(() => mockDb.insertWorkout(any())).called(1);
-    verify(() => mockDb.insertWorkoutSet(any())).called(1);
+    verify(() => mockDb.insertWorkoutWithSets(any(), any())).called(1);
   });
 }

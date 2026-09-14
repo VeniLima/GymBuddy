@@ -123,5 +123,55 @@ void main() {
       expect(history[0]['weight'], 60.0);
       expect(history[0]['rpe'], 8.5);
     });
+
+    test('exportToMap tags the backup with the current schema version', () async {
+      final backup = await dbHelper.exportToMap();
+      expect(backup['schemaVersion'], DatabaseHelper.backupSchemaVersion);
+      expect(backup['exportedAt'], isNotNull);
+    });
+
+    test('validateBackup accepts a well-formed backup', () {
+      final backup = {
+        'schemaVersion': DatabaseHelper.backupSchemaVersion,
+        'workouts': [
+          {'name': 'A', 'startTime': '2026-01-01T00:00:00Z', 'durationSeconds': 60, 'totalVolume': 100.0},
+        ],
+        'workout_sets': [
+          {'exerciseId': 1, 'reps': 10, 'weight': 50.0, 'setType': 'Normal', 'isCompleted': 1},
+        ],
+      };
+      expect(DatabaseHelper.validateBackup(backup), isNull);
+    });
+
+    test('validateBackup rejects a backup from a newer, unsupported schema version', () {
+      final backup = {'schemaVersion': DatabaseHelper.backupSchemaVersion + 1};
+      expect(DatabaseHelper.validateBackup(backup), isNotNull);
+    });
+
+    test('validateBackup rejects a row with a wrong-typed required field', () {
+      final backup = {
+        'workout_sets': [
+          {'exerciseId': 1, 'reps': 10, 'weight': '50kg', 'setType': 'Normal', 'isCompleted': 1},
+        ],
+      };
+      final error = DatabaseHelper.validateBackup(backup);
+      expect(error, isNotNull);
+      expect(error, contains('workout_sets'));
+    });
+
+    test('restoreFromMap rejects invalid data without touching the existing database', () async {
+      await dbHelper.insertWeightLog(75.5);
+
+      final badBackup = {
+        'workout_sets': [
+          {'exerciseId': 1, 'reps': 10, 'weight': 'not-a-number', 'setType': 'Normal', 'isCompleted': 1},
+        ],
+      };
+
+      await expectLater(dbHelper.restoreFromMap(badBackup), throwsFormatException);
+
+      final logsAfter = await dbHelper.getWeightLogs();
+      expect(logsAfter.any((l) => l['weight'] == 75.5), true, reason: 'a rejected backup must not wipe existing data');
+    });
   });
 }

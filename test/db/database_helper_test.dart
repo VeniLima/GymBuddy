@@ -180,6 +180,26 @@ void main() {
       expect(total, 900);
     });
 
+    test('insertWorkoutWithSets saves the workout and all its sets in one call', () async {
+      final exercises = await dbHelper.getExercises();
+      final ex = exercises[0];
+
+      final (savedWorkout, savedSets) = await dbHelper.insertWorkoutWithSets(
+        Workout(name: 'Transactional Workout', startTime: DateTime.now(), totalVolume: 300),
+        [
+          WorkoutSet(exerciseId: ex.id!, reps: 10, weight: 20, isCompleted: true),
+          WorkoutSet(exerciseId: ex.id!, reps: 8, weight: 25, isCompleted: true),
+        ],
+      );
+
+      expect(savedWorkout.id, isNotNull);
+      expect(savedSets.length, 2);
+      expect(savedSets.every((s) => s.id != null && s.workoutId == savedWorkout.id), true);
+
+      final persistedSets = await dbHelper.getSetsForWorkout(savedWorkout.id!);
+      expect(persistedSets.length, 2, reason: 'both sets must be committed together with the workout');
+    });
+
     test('CRUD Body Measurements', () async {
       // Insert
       final id1 = await dbHelper.insertBodyMeasurement('prof_arm', 40.5);

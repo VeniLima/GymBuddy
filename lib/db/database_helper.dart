@@ -528,6 +528,70 @@ CREATE TABLE body_measurements (
     );
   }
 
+  /// Saves a finished workout and all of its sets atomically: either every
+  /// row is written, or none is. Without this, a crash mid-save (or a
+  /// failing insert partway through) used to leave a workout with some of
+  /// its sets missing, with no way to know it happened.
+  Future<(Workout, List<WorkoutSet>)> insertWorkoutWithSets(
+    Workout workout,
+    List<WorkoutSet> sets,
+  ) async {
+    final db = await instance.database;
+    return await db.transaction((txn) async {
+      final workoutId = await txn.insert('workouts', workout.toMap());
+      final savedWorkout = Workout(
+        id: workoutId,
+        name: workout.name,
+        startTime: workout.startTime,
+        endTime: workout.endTime,
+        durationSeconds: workout.durationSeconds,
+        totalVolume: workout.totalVolume,
+        notes: workout.notes,
+        recordsBroken: workout.recordsBroken,
+      );
+
+      final List<WorkoutSet> savedSets = [];
+      for (var set in sets) {
+        final setToSave = WorkoutSet(
+          workoutId: workoutId,
+          exerciseId: set.exerciseId,
+          reps: set.reps,
+          weight: set.weight,
+          durationSeconds: set.durationSeconds,
+          distance: set.distance,
+          setType: set.setType,
+          isCompleted: set.isCompleted,
+          previousReps: set.previousReps,
+          previousWeight: set.previousWeight,
+          previousDurationSeconds: set.previousDurationSeconds,
+          previousDistance: set.previousDistance,
+          rpe: set.rpe,
+          superSetId: set.superSetId,
+        );
+        final setId = await txn.insert('workout_sets', setToSave.toMap());
+        savedSets.add(WorkoutSet(
+          id: setId,
+          workoutId: setToSave.workoutId,
+          exerciseId: setToSave.exerciseId,
+          reps: setToSave.reps,
+          weight: setToSave.weight,
+          durationSeconds: setToSave.durationSeconds,
+          distance: setToSave.distance,
+          setType: setToSave.setType,
+          isCompleted: setToSave.isCompleted,
+          previousReps: setToSave.previousReps,
+          previousWeight: setToSave.previousWeight,
+          previousDurationSeconds: setToSave.previousDurationSeconds,
+          previousDistance: setToSave.previousDistance,
+          rpe: setToSave.rpe,
+          superSetId: setToSave.superSetId,
+        ));
+      }
+
+      return (savedWorkout, savedSets);
+    });
+  }
+
   Future<int> updateWorkout(Workout workout) async {
     final db = await instance.database;
     return db.update(
@@ -852,6 +916,87 @@ CREATE TABLE body_measurements (
   }
 
   // --- Backup and Restore ---
+
+  /// Bumped whenever the shape backups rely on changes in a way that older
+  /// app versions couldn't restore correctly.
+  static const int backupSchemaVersion = 1;
+
+  static bool _isNonEmptyString(dynamic v) => v is String && v.isNotEmpty;
+  static bool _isInt(dynamic v) => v is int;
+  static bool _isNum(dynamic v) => v is num;
+
+  /// Fields whose presence and type are required for a row in that table to
+  /// be safely inserted. sqflite/SQLite won't reject a wrong type on its own
+  /// (SQLite columns are loosely typed), so bad data would otherwise only
+  /// surface later, when something tries to read it back.
+  static final Map<String, Map<String, bool Function(dynamic)>> _backupRequiredFields = {
+    'exercises': {
+      'name': _isNonEmptyString,
+      'muscleGroup': _isNonEmptyString,
+    },
+    'routines': {
+      'name': _isNonEmptyString,
+    },
+    'routine_exercises': {
+      'routineId': _isInt,
+      'exerciseId': _isInt,
+    },
+    'workouts': {
+      'name': _isNonEmptyString,
+      'startTime': _isNonEmptyString,
+      'durationSeconds': _isInt,
+      'totalVolume': _isNum,
+    },
+    'workout_sets': {
+      'exerciseId': _isInt,
+      'reps': _isInt,
+      'weight': _isNum,
+      'setType': _isNonEmptyString,
+      'isCompleted': _isInt,
+    },
+    'weight_logs': {
+      'date': _isNonEmptyString,
+      'weight': _isNum,
+    },
+    'body_measurements': {
+      'date': _isNonEmptyString,
+      'type': _isNonEmptyString,
+      'value': _isNum,
+    },
+  };
+
+  /// Checks a backup map before it's allowed anywhere near the database.
+  /// Returns null when the backup is safe to restore, or a human-readable
+  /// reason it was rejected.
+  static String? validateBackup(Map<String, dynamic> data) {
+    final version = data['schemaVersion'];
+    if (version != null) {
+      if (version is! int) return 'Campo schemaVersion do backup é inválido.';
+      if (version > backupSchemaVersion) {
+        return 'Este backup foi criado por uma versão mais nova do GymBuddy. Atualize o app antes de restaurar.';
+      }
+    }
+
+    for (final table in _backupRequiredFields.keys) {
+      if (!data.containsKey(table)) continue;
+      final rawList = data[table];
+      if (rawList is! List) return 'O campo "$table" do backup não é uma lista.';
+
+      final requiredFields = _backupRequiredFields[table]!;
+      for (var i = 0; i < rawList.length; i++) {
+        final row = rawList[i];
+        if (row is! Map) return 'O item $i de "$table" não é um objeto válido.';
+        for (final entry in requiredFields.entries) {
+          if (!entry.value(row[entry.key])) {
+            return 'O item $i de "$table" tem o campo "${entry.key}" ausente ou com tipo inválido.';
+          }
+        }
+      }
+    }
+
+    return null;
+  }
+
   Future<Map<String, dynamic>> exportToMap() async {
     final db = await instance.database;
     final exercises = await db.query('exercises');
@@ -863,6 +1008,8 @@ CREATE TABLE body_measurements (
     final bodyMeasurements = await db.query('body_measurements');
 
     return {
+      'schemaVersion': backupSchemaVersion,
+      'exportedAt': DateTime.now().toIso8601String(),
       'exercises': exercises,
       'routines': routines,
       'routine_exercises': routineExercises,
@@ -874,6 +1021,11 @@ CREATE TABLE body_measurements (
   }
 
   Future<void> restoreFromMap(Map<String, dynamic> data) async {
+    final validationError = validateBackup(data);
+    if (validationError != null) {
+      throw FormatException(validationError);
+    }
+
     final db = await instance.database;
     await db.transaction((txn) async {
       // Deletar em ordem inversa de dependência para respeitar foreign keys

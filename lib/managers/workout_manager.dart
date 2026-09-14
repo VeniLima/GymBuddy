@@ -421,14 +421,11 @@ class WorkoutManager extends ChangeNotifier {
       recordsBroken: recordsBrokenCount,
     );
 
-    final savedWorkout = await DatabaseHelper.instance.insertWorkout(workoutToSave);
-    List<WorkoutSet> completedSets = [];
-    
+    final List<WorkoutSet> setsToSave = [];
     for (var sets in workoutExercises.values) {
       for (var set in sets) {
         if (set.isCompleted) {
-          final setToSave = WorkoutSet(
-            workoutId: savedWorkout.id,
+          setsToSave.add(WorkoutSet(
             exerciseId: set.exerciseId,
             reps: set.reps,
             weight: set.weight,
@@ -438,12 +435,13 @@ class WorkoutManager extends ChangeNotifier {
             isCompleted: true,
             rpe: set.rpe,
             superSetId: set.superSetId,
-          );
-          await DatabaseHelper.instance.insertWorkoutSet(setToSave);
-          completedSets.add(setToSave);
+          ));
         }
       }
     }
+
+    final (savedWorkout, completedSets) =
+        await DatabaseHelper.instance.insertWorkoutWithSets(workoutToSave, setsToSave);
 
     bool routineChanged = _hasRoutineChanged();
     
