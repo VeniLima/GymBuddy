@@ -46,6 +46,7 @@ void main() {
     when(() => mockDb.getRawWorkoutSetsHistory()).thenAnswer((_) async => []);
     when(() => mockDb.exportToMap()).thenAnswer((_) async => {'workouts': []});
     when(() => mockDb.restoreFromMap(any())).thenAnswer((_) async => {});
+    when(() => mockDb.getBodyMeasurements()).thenAnswer((_) async => []);
 
     // Setup MethodChannel mocks to bypass platform calls
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(

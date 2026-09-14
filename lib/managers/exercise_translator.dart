@@ -88,10 +88,11 @@ class ExerciseTranslator {
     }
 
     // 2. Pattern building
-    String workingName = lowerName;
+    // Drop the parentheses themselves (keeping their content, e.g. the
+    // equipment word) so extracting a term from inside them doesn't leave
+    // behind an empty "()" in the translated name.
+    String workingName = lowerName.replaceAll('(', ' ').replaceAll(')', ' ');
 
-    // Remove parenthesis content or treat it specially if needed, but for now just process.
-    
     // Extract Equipment
     String equipmentSuffix = '';
     final equipments = ['barbell', 'dumbbell', 'kettlebell', 'cable', 'smith machine', 'machine', 'lever', 'band', 'bodyweight', 'ez bar'];

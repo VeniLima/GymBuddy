@@ -42,6 +42,7 @@ void main() {
     when(() => mockDb.getWorkoutDatesLast7Days()).thenAnswer((_) async => []);
     when(() => mockDb.getWorkoutDatesCurrentMonth()).thenAnswer((_) async => []);
     when(() => mockDb.getAllWorkoutsOrderedByDate()).thenAnswer((_) async => []);
+    when(() => mockDb.getBodyMeasurements()).thenAnswer((_) async => []);
   });
 
   Widget createTestableWidget() {

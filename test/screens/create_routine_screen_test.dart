@@ -72,8 +72,11 @@ void main() {
     await tester.tap(find.byType(ElevatedButton));
     await tester.pumpAndSettle();
 
-    expect(find.text('Bench Press (Barbell)'), findsOneWidget);
-    await tester.tap(find.text('Bench Press (Barbell)'));
+    // The picker list shows the name run through ExerciseTranslator (pt by
+    // default); once added to the routine it's shown via Exercise.translatedName
+    // instead, which uses TranslationManager's own dictionary.
+    expect(find.text('Supino com Barra'), findsOneWidget);
+    await tester.tap(find.text('Supino com Barra'));
     await tester.pumpAndSettle();
 
     // Verify it was added to the list
@@ -119,7 +122,7 @@ void main() {
     await tester.tap(find.byType(ElevatedButton));
     await tester.pumpAndSettle();
     
-    await tester.tap(find.text('Bench Press (Barbell)'));
+    await tester.tap(find.text('Supino com Barra'));
     await tester.pumpAndSettle();
 
     // Save
