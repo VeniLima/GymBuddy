@@ -184,6 +184,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                     children: [
                       IconButton(
                         icon: const Icon(Icons.remove_circle_outline, size: 40),
+                        tooltip: isPt ? 'Diminuir 30 segundos' : 'Decrease 30 seconds',
                         onPressed: () {
                           if (currentSeconds > 30) {
                             setModalState(() => currentSeconds -= 30);
@@ -197,6 +198,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                       ),
                       IconButton(
                         icon: const Icon(Icons.add_circle_outline, size: 40),
+                        tooltip: isPt ? 'Aumentar 30 segundos' : 'Increase 30 seconds',
                         onPressed: () {
                           if (currentSeconds < 300) {
                             setModalState(() => currentSeconds += 30);
@@ -339,6 +341,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                     children: [
                       IconButton(
                         icon: const Icon(Icons.skip_next_rounded, color: Colors.white, size: 22),
+                        tooltip: isPt ? 'Pular descanso' : 'Skip rest',
                         onPressed: () => wm.skipRestTimer(),
                         constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                       ),
@@ -367,6 +370,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
             title: Text(wm.workoutName.isEmpty ? (isPt ? 'Registrar Treino' : 'Log Workout') : wm.workoutName),
             leading: IconButton(
               icon: const Icon(Icons.keyboard_arrow_down),
+              tooltip: isPt ? 'Minimizar treino' : 'Minimize workout',
               onPressed: () {
                 wm.minimize();
                 Navigator.pop(context);
@@ -375,6 +379,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
             actions: [
               IconButton(
                 icon: const Icon(Icons.delete_outline, color: Colors.red),
+                tooltip: isPt ? 'Cancelar treino' : 'Cancel workout',
                 onPressed: () {
                   wm.cancelWorkout();
                   Navigator.pop(context);
@@ -629,11 +634,15 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                   SizedBox(
                     width: 30,
                     height: 32,
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () => _showSetTypeSelector(exercise, index, set),
-                      child: Center(
-                        child: _buildSetTypeBadge(index, set, set.isCompleted, isAnyPR),
+                    child: Semantics(
+                      button: true,
+                      label: tm.translate('act_set_type'),
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () => _showSetTypeSelector(exercise, index, set),
+                        child: Center(
+                          child: _buildSetTypeBadge(index, set, set.isCompleted, isAnyPR),
+                        ),
                       ),
                     ),
                   ),
@@ -776,7 +785,9 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                     SizedBox(
                       width: 45,
                       height: 32,
-                      child: TextButton(
+                      child: Tooltip(
+                        message: tm.translate('act_rpe_selector'),
+                        child: TextButton(
                         style: TextButton.styleFrom(
                           backgroundColor: set.rpe != null ? Colors.blue.withOpacity(0.15) : Colors.grey.withOpacity(0.15),
                           padding: EdgeInsets.zero,
@@ -785,7 +796,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                         ),
                         onPressed: () => _showRpeSelector(exercise, index, set),
                         child: Text(
-                          set.rpe != null 
+                          set.rpe != null
                               ? (set.rpe == set.rpe!.roundToDouble() ? set.rpe!.toInt().toString() : set.rpe!.toString())
                               : '-',
                           style: TextStyle(
@@ -793,6 +804,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                             color: set.rpe != null ? Colors.blue.shade200 : Colors.grey,
                             fontWeight: FontWeight.bold,
                           ),
+                        ),
                         ),
                       ),
                     ),
@@ -804,6 +816,9 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                     width: 40,
                     child: IconButton(
                       icon: Icon(Icons.check, color: set.isCompleted ? Colors.green : Colors.grey),
+                      tooltip: set.isCompleted
+                          ? (isPt ? 'Desfazer série' : 'Undo set')
+                          : (isPt ? 'Concluir série' : 'Complete set'),
                       onPressed: () {
                         if (!isCardio) {
                           double finalWeight = set.weight;

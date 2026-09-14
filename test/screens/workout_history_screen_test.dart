@@ -62,8 +62,12 @@ void main() {
 
     expect(find.text('Full Body A'), findsOneWidget);
     // Based on _buildQuickMetric implementation, it might be formatted as "5000 kg"
-    expect(find.textContaining('5000'), findsOneWidget); 
+    expect(find.textContaining('5000'), findsOneWidget);
     expect(find.text('1h 0m'), findsOneWidget); // Duration
+
+    // Icon-only buttons must expose a screen-reader label.
+    expect(find.byTooltip('Compartilhar treino'), findsOneWidget);
+    expect(find.byTooltip('Excluir treino'), findsOneWidget);
   });
 
   testWidgets('Deleting a workout should trigger confirmation dialog', (WidgetTester tester) async {

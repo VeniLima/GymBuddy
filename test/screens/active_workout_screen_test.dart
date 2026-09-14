@@ -176,4 +176,31 @@ void main() {
     manager.cancelWorkout();
     await tester.pumpAndSettle();
   });
+
+  testWidgets('Icon-only buttons expose a screen-reader label', (WidgetTester tester) async {
+    final handle = tester.ensureSemantics();
+    final manager = WorkoutManager.instance;
+    final exercise = Exercise(id: 1, name: 'Bench Press', muscleGroup: 'Chest');
+
+    manager.isActive = true;
+    manager.workoutExercises.clear();
+    manager.workoutExercises[exercise] = [
+      WorkoutSet(exerciseId: 1, reps: 10, weight: 60, isCompleted: false)
+    ];
+
+    await tester.pumpWidget(createTestableWidget());
+    await tester.pumpAndSettle();
+
+    // The destructive "cancel workout" action in particular must never be
+    // an unlabeled icon — a screen-reader user needs to know what it does
+    // before activating it.
+    expect(find.byTooltip('Cancelar treino'), findsOneWidget);
+    expect(find.byTooltip('Minimizar treino'), findsOneWidget);
+    expect(find.byTooltip('Concluir série'), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp('Tipo da série')), findsOneWidget);
+
+    manager.cancelWorkout();
+    await tester.pumpAndSettle();
+    handle.dispose();
+  });
 }

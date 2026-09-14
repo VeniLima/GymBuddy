@@ -175,6 +175,7 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -560,15 +561,17 @@ class _WorkoutHistoryCardState extends State<WorkoutHistoryCard> {
                       ),
                     IconButton(
                       icon: Icon(Icons.share_outlined, color: Colors.blue[400], size: 20),
+                      tooltip: isPt ? 'Compartilhar treino' : 'Share workout',
                       onPressed: () => _shareWorkoutText(context),
-                      constraints: const BoxConstraints(),
+                      constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                       padding: EdgeInsets.zero,
                     ),
                     const SizedBox(width: 12),
                     IconButton(
                       icon: Icon(Icons.delete_outline, color: Colors.red[400], size: 20),
+                      tooltip: isPt ? 'Excluir treino' : 'Delete workout',
                       onPressed: widget.onDelete,
-                      constraints: const BoxConstraints(),
+                      constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                       padding: EdgeInsets.zero,
                     ),
                   ],
