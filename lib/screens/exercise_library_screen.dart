@@ -241,21 +241,6 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen> with Sing
     }
     equipmentFilters.addAll(equipments.toList()..sort());
 
-    const Map<String, String> muscleTranslationPt = {
-      'All': 'Todos Músculos',
-      'Chest': 'Peito',
-      'Back': 'Costas',
-      'Shoulders': 'Ombros',
-      'Biceps': 'Bíceps',
-      'Triceps': 'Tríceps',
-      'Quadriceps': 'Quadríceps',
-      'Hamstrings': 'Isquiotibiais',
-      'Adductors': 'Adutores',
-      'Glutes': 'Glúteos',
-      'Calves': 'Panturrilha',
-      'Core': 'Abdômen',
-    };
-
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -318,7 +303,7 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen> with Sing
                   items: muscleFilters.map((m) {
                     return DropdownMenuItem(
                       value: m,
-                      child: Text(isPt ? (muscleTranslationPt[m] ?? m) : m),
+                      child: Text(m == 'All' ? (isPt ? 'Todos Músculos' : 'All') : tm.translateMuscleGroup(m)),
                     );
                   }).toList(),
                   onChanged: (val) {

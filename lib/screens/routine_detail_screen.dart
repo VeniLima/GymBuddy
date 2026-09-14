@@ -115,23 +115,7 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
     }
   }
 
-  String _translateMuscle(String muscle) {
-    final isPt = tm.currentLanguage == 'pt';
-    const Map<String, String> muscleTranslationPt = {
-      'Chest': 'Peito',
-      'Back': 'Costas',
-      'Shoulders': 'Ombros',
-      'Biceps': 'Bíceps',
-      'Triceps': 'Tríceps',
-      'Quadriceps': 'Quadríceps',
-      'Hamstrings': 'Isquiotibiais',
-      'Adductors': 'Adutores',
-      'Glutes': 'Glúteos',
-      'Calves': 'Panturrilha',
-      'Core': 'Abdômen',
-    };
-    return (isPt ? muscleTranslationPt[muscle] : muscle) ?? muscle;
-  }
+  String _translateMuscle(String muscle) => tm.translateMuscleGroup(muscle);
 
   @override
   Widget build(BuildContext context) {

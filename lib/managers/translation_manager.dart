@@ -63,6 +63,62 @@ class TranslationManager extends ChangeNotifier {
     return translation;
   }
 
+  /// Muscle group names as stored in the database (English) -> displayed
+  /// name. Used to live as near-identical copies of this same map in 7
+  /// different screens (with real drift between them — a typo in one,
+  /// extra detail in another) before being consolidated here.
+  static const Map<String, String> _muscleGroupsPt = {
+    'Chest': 'Peito',
+    'Back': 'Costas',
+    'Shoulders': 'Ombros',
+    'Biceps': 'Bíceps',
+    'Triceps': 'Tríceps',
+    'Quadriceps': 'Quadríceps',
+    'Hamstrings': 'Isquiotibiais',
+    'Adductors': 'Adutores',
+    'Glutes': 'Glúteos',
+    'Calves': 'Panturrilha',
+    'Core': 'Abdômen',
+    'Abs': 'Abdômen',
+  };
+
+  String translateMuscleGroup(String muscle) {
+    if (_currentLanguage != 'pt') return muscle;
+    return _muscleGroupsPt[muscle] ?? muscle;
+  }
+
+  // Sunday-first, for calendar grid headers (Sun, Mon, ..., Sat) — not
+  // indexed by DateTime.weekday (which is Monday-first), just rendered in
+  // this literal order as a static header row.
+  static const _weekdayInitialsSundayFirstPt = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+  static const _weekdayInitialsSundayFirstEn = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+  static const _weekdayAbbrevPt = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+  static const _weekdayAbbrevEn = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  static const _monthNamesPt = [
+    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+  ];
+  static const _monthNamesEn = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December',
+  ];
+
+  /// Sunday-first one-letter weekday initials, for calendar grid headers.
+  List<String> get weekdayInitialsSundayFirst =>
+      _currentLanguage == 'pt' ? _weekdayInitialsSundayFirstPt : _weekdayInitialsSundayFirstEn;
+
+  /// [weekday] follows DateTime's convention: 1 = Monday ... 7 = Sunday.
+  String getWeekdayAbbrev(int weekday) {
+    final list = _currentLanguage == 'pt' ? _weekdayAbbrevPt : _weekdayAbbrevEn;
+    return list[(weekday - 1) % 7];
+  }
+
+  /// [month] is 1-indexed (1 = January).
+  String getMonthName(int month) {
+    final list = _currentLanguage == 'pt' ? _monthNamesPt : _monthNamesEn;
+    return list[(month - 1) % 12];
+  }
+
   static const Map<String, Map<String, String>> _dictionary = {
     'pt': {
       // Bottom Navigation

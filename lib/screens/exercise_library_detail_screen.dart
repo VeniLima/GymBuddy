@@ -71,21 +71,7 @@ class ExerciseLibraryDetailScreen extends StatelessWidget {
       }
     }
 
-    const Map<String, String> muscleTranslationPt = {
-      'Chest': 'Peito',
-      'Back': 'Costas',
-      'Shoulders': 'Ombros',
-      'Biceps': 'Bíceps',
-      'Triceps': 'Trícep',
-      'Quadriceps': 'Quadríceps',
-      'Hamstrings': 'Isquiotibiais',
-      'Adductors': 'Adutores',
-      'Glutes': 'Glúteos',
-      'Calves': 'Panturrilha',
-      'Core': 'Abdômen',
-    };
-
-    final displayMuscle = (isPt ? (muscleTranslationPt[muscleGroup] ?? muscleGroup) : muscleGroup).toUpperCase();
+    final displayMuscle = tm.translateMuscleGroup(muscleGroup).toUpperCase();
     final displayForce = force.isNotEmpty ? tm.translate('ex_$force') : 'N/A';
 
     Future<void> importExercise() async {

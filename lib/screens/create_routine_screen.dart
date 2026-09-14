@@ -59,36 +59,7 @@ class _CreateRoutineScreenState extends State<CreateRoutineScreen> {
     }
   }
 
-  String _translateMuscle(String muscle) {
-    final isPt = TranslationManager.instance.currentLanguage == 'pt';
-    const Map<String, String> muscleTranslationPt = {
-      'Chest': 'Peito',
-      'Back': 'Costas',
-      'Shoulders': 'Ombros',
-      'Biceps': 'Bíceps',
-      'Triceps': 'Tríceps',
-      'Quadriceps': 'Quadríceps (Frente da coxa)',
-      'Hamstrings': 'Isquiotibiais (Atrás da coxa)',
-      'Adductors': 'Adutores (Parte interna)',
-      'Glutes': 'Glúteos',
-      'Calves': 'Panturrilha',
-      'Core': 'Abdômen',
-    };
-    const Map<String, String> muscleTranslationEn = {
-      'Chest': 'Chest',
-      'Back': 'Back',
-      'Shoulders': 'Shoulders',
-      'Biceps': 'Biceps',
-      'Triceps': 'Triceps',
-      'Quadriceps': 'Quadriceps (Front thigh)',
-      'Hamstrings': 'Hamstrings (Back thigh)',
-      'Adductors': 'Adductors (Inner thigh)',
-      'Glutes': 'Glutes',
-      'Calves': 'Calves',
-      'Core': 'Core',
-    };
-    return (isPt ? muscleTranslationPt[muscle] : muscleTranslationEn[muscle]) ?? muscle;
-  }
+  String _translateMuscle(String muscle) => TranslationManager.instance.translateMuscleGroup(muscle);
 
   void _addExercise() async {
     final Exercise? selected = await Navigator.push(

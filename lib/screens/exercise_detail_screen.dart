@@ -139,24 +139,8 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isPt = tm.currentLanguage == 'pt';
     final displayMuscle = widget.exercise.muscleGroup; // Em exibição real, pode ser traduzido.
-    
-    // Mapeamento local simples para músculo na AppBar
-    const Map<String, String> muscleTranslationPt = {
-      'Chest': 'Peito',
-      'Back': 'Costas',
-      'Shoulders': 'Ombros',
-      'Biceps': 'Bíceps',
-      'Triceps': 'Tríceps',
-      'Quadriceps': 'Quadríceps',
-      'Hamstrings': 'Isquiotibiais',
-      'Adductors': 'Adutores',
-      'Glutes': 'Glúteos',
-      'Calves': 'Panturrilha',
-      'Core': 'Abdômen',
-    };
-    final muscleName = isPt ? (muscleTranslationPt[displayMuscle] ?? displayMuscle) : displayMuscle;
+    final muscleName = tm.translateMuscleGroup(displayMuscle);
 
     return DefaultTabController(
       length: 3,

@@ -251,25 +251,7 @@ class _WorkoutHistoryCardState extends State<WorkoutHistoryCard> {
 
   bool _isExpanded = false;
 
-  String _translateMuscle(String muscle) {
-    final isPt = TranslationManager.instance.currentLanguage == 'pt';
-    if (!isPt) return muscle;
-    switch (muscle) {
-      case 'Chest': return 'Peito';
-      case 'Back': return 'Costas';
-      case 'Shoulders': return 'Ombros';
-      case 'Biceps': return 'Bíceps';
-      case 'Triceps': return 'Tríceps';
-      case 'Abs': return 'Abdômen';
-      case 'Core': return 'Abdômen';
-      case 'Quadriceps': return 'Quadríceps';
-      case 'Hamstrings': return 'Isquiotibiais';
-      case 'Adductors': return 'Adutores';
-      case 'Glutes': return 'Glúteos';
-      case 'Calves': return 'Panturrilha';
-      default: return muscle;
-    }
-  }
+  String _translateMuscle(String muscle) => TranslationManager.instance.translateMuscleGroup(muscle);
 
   String _formatShareDate(DateTime date) {
     final isPt = TranslationManager.instance.currentLanguage == 'pt';

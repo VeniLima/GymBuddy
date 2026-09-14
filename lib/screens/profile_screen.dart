@@ -1092,13 +1092,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return DateFormat('yyyy-MM-dd').format(date);
     }).toSet();
 
-    String getWeekdayAbbreviation(int weekday) {
-      final isPt = tm.currentLanguage == 'pt';
-      final abbrevPt = {1: 'Seg', 2: 'Ter', 3: 'Qua', 4: 'Qui', 5: 'Sex', 6: 'Sáb', 7: 'Dom'};
-      final abbrevEn = {1: 'Mon', 2: 'Tue', 3: 'Wed', 4: 'Thu', 5: 'Fri', 6: 'Sat', 7: 'Sun'};
-      return (isPt ? abbrevPt[weekday] : abbrevEn[weekday]) ?? '';
-    }
-
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1128,7 +1121,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               return Column(
                 children: [
                   Text(
-                    getWeekdayAbbreviation(day.weekday),
+                    tm.getWeekdayAbbrev(day.weekday),
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
@@ -1193,40 +1186,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return DateFormat('yyyy-MM-dd').format(date);
     }).toSet();
 
-    final List<String> weekdays = isPt ? ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'] : ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+    final weekdays = tm.weekdayInitialsSundayFirst;
     final totalGridItems = firstDayOffset + daysInMonth;
-
-    String getMonthName(int month) {
-      const monthsPt = {
-        1: 'Janeiro',
-        2: 'Fevereiro',
-        3: 'Março',
-        4: 'Abril',
-        5: 'Maio',
-        6: 'Junho',
-        7: 'Julho',
-        8: 'Agosto',
-        9: 'Setembro',
-        10: 'Outubro',
-        11: 'Novembro',
-        12: 'Dezembro',
-      };
-      const monthsEn = {
-        1: 'January',
-        2: 'February',
-        3: 'March',
-        4: 'April',
-        5: 'May',
-        6: 'June',
-        7: 'July',
-        8: 'August',
-        9: 'September',
-        10: 'October',
-        11: 'November',
-        12: 'December',
-      };
-      return (isPt ? monthsPt[month] : monthsEn[month]) ?? '';
-    }
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -1242,9 +1203,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                isPt 
-                    ? 'Calendário de ${getMonthName(now.month)}' 
-                    : '${getMonthName(now.month)} Calendar',
+                isPt
+                    ? 'Calendário de ${tm.getMonthName(now.month)}'
+                    : '${tm.getMonthName(now.month)} Calendar',
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
@@ -1431,20 +1392,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             int idx = mapEntry.key;
             var entry = mapEntry.value;
             
-            const Map<String, String> muscleTranslationPt = {
-              'Chest': 'Peito',
-              'Back': 'Costas',
-              'Shoulders': 'Ombros',
-              'Biceps': 'Bíceps',
-              'Triceps': 'Tríceps',
-              'Quadriceps': 'Quadríceps',
-              'Hamstrings': 'Isquiotibiais',
-              'Adductors': 'Adutores',
-              'Glutes': 'Glúteos',
-              'Calves': 'Panturrilha',
-              'Core': 'Abdômen',
-            };
-            final displayMuscle = isPt ? (muscleTranslationPt[entry.key] ?? entry.key) : entry.key;
+            final displayMuscle = tm.translateMuscleGroup(entry.key);
 
             return Row(
               mainAxisSize: MainAxisSize.min,
@@ -1557,7 +1505,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 int idx = value.toInt();
                 if (idx < 0 || idx >= sortedKeys.length) return const SizedBox();
                 final date = DateTime.parse(sortedKeys[idx]);
-                final days = isPt ? ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'] : ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+                final days = tm.weekdayInitialsSundayFirst;
                 return Padding(
                   padding: const EdgeInsets.only(top: 8.0),
                   child: Text(days[date.weekday % 7], style: const TextStyle(color: Colors.white38, fontSize: 11)),
