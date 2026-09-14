@@ -37,11 +37,11 @@ void main() {
     DatabaseHelper.instance = mockDb;
     NotificationManager.instance = mockNotifications;
     
-    manager = WorkoutManager.instance;
-    manager.cancelWorkout(); // Reset state
-
     SharedPreferences.setMockInitialValues({});
-    
+
+    manager = WorkoutManager.instance;
+    manager.cancelWorkout(); // Reset state (also clears any leftover draft, which needs the mock above)
+
     when(() => mockDb.getExercises()).thenAnswer((_) async => []);
     when(() => mockDb.getMaxWeightForExercise(any())).thenAnswer((_) async => 0.0);
     when(() => mockDb.getMaxVolumeForExercise(any())).thenAnswer((_) async => 0.0);
@@ -125,5 +125,71 @@ void main() {
     expect(result.sets.length, 1);
     expect(manager.isActive, false);
     verify(() => mockDb.insertWorkoutWithSets(any(), any())).called(1);
+  });
+
+  group('Draft autosave (active workout survives a process restart)', () {
+    test('a mutation (toggleSetCompletion) saves a draft that restoreDraftIfAny() can recover', () async {
+      final exercise = Exercise(id: 1, name: 'Push Up', muscleGroup: 'Chest');
+      when(() => mockDb.getExercises()).thenAnswer((_) async => [exercise]);
+
+      await manager.startWorkout('Draft Test', [exercise]);
+      manager.toggleSetCompletion(exercise, 0); // triggers _saveDraft()
+      manager.exerciseRestTimes[1] = 77;
+
+      // Give the fire-and-forget _saveDraft() calls a chance to complete.
+      await Future.delayed(Duration.zero);
+
+      // Simulate the process dying and restarting: memory is gone, but
+      // SharedPreferences (backed by the mock, which persists for this
+      // test) survives.
+      manager.isActive = false;
+      manager.isMinimized = false;
+      manager.workoutExercises.clear();
+      manager.workoutName = '';
+      manager.secondsElapsed = 0;
+
+      final restored = await manager.restoreDraftIfAny();
+
+      expect(restored, true);
+      expect(manager.isActive, true);
+      expect(manager.isMinimized, true, reason: 'should land on the resume banner, not the screen');
+      expect(manager.workoutName, 'Draft Test');
+      expect(manager.workoutExercises.containsKey(exercise), true);
+      expect(manager.workoutExercises[exercise]!.first.isCompleted, true);
+      expect(manager.exerciseRestTimes[1], 77);
+
+      manager.cancelWorkout();
+    });
+
+    test('restoreDraftIfAny() returns false when there is no saved draft', () async {
+      final restored = await manager.restoreDraftIfAny();
+      expect(restored, false);
+      expect(manager.isActive, false);
+    });
+
+    test('restoreDraftIfAny() does nothing if a workout is already active in memory', () async {
+      final exercise = Exercise(id: 1, name: 'Push Up', muscleGroup: 'Chest');
+      when(() => mockDb.getExercises()).thenAnswer((_) async => [exercise]);
+      await manager.startWorkout('Already Active', [exercise]);
+
+      final restored = await manager.restoreDraftIfAny();
+
+      expect(restored, false);
+      expect(manager.workoutName, 'Already Active');
+    });
+
+    test('cancelWorkout() clears the draft so it is not restored later', () async {
+      final exercise = Exercise(id: 1, name: 'Push Up', muscleGroup: 'Chest');
+      when(() => mockDb.getExercises()).thenAnswer((_) async => [exercise]);
+      await manager.startWorkout('To Be Cancelled', [exercise]);
+      await Future.delayed(Duration.zero);
+
+      manager.cancelWorkout();
+
+      // Simulate a restart after cancelling.
+      manager.workoutExercises.clear();
+      final restored = await manager.restoreDraftIfAny();
+      expect(restored, false);
+    });
   });
 }

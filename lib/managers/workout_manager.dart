@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import '../models/exercise.dart';
@@ -57,6 +58,106 @@ class WorkoutManager extends ChangeNotifier {
 
   Map<int, String?> _routineSuperSets = {};
 
+  // --- Draft autosave ---
+  //
+  // The active workout used to live only in memory: nothing was written to
+  // the database until finishWorkout() at the very end. If Android killed
+  // the app process in the background (routine — the "workout in progress"
+  // notification is a plain notification, not a real foreground service,
+  // so it doesn't prevent this), the whole workout was lost with no way to
+  // recover it, even though the notification kept showing as if nothing
+  // had happened. This periodically snapshots the in-progress workout to
+  // SharedPreferences so it can be restored on the next app launch.
+  static const String _draftPrefsKey = 'active_workout_draft_v1';
+
+  Future<void> _saveDraft() async {
+    if (!isActive || currentWorkout == null) return;
+    final prefs = await SharedPreferences.getInstance();
+    final data = {
+      'workoutName': workoutName,
+      'notes': notes,
+      'routineId': routineId,
+      'startTime': currentWorkout!.startTime.toIso8601String(),
+      'secondsElapsed': secondsElapsed,
+      'exerciseRestTimes': exerciseRestTimes.map((id, seconds) => MapEntry(id.toString(), seconds)),
+      'exercises': workoutExercises.entries
+          .map((entry) => {
+                'exerciseId': entry.key.id,
+                'sets': entry.value.map((s) => s.toMap()).toList(),
+              })
+          .toList(),
+    };
+    await prefs.setString(_draftPrefsKey, jsonEncode(data));
+  }
+
+  Future<void> _clearDraft() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_draftPrefsKey);
+  }
+
+  /// Call once at app startup, before anything reads [isActive]. Returns
+  /// true if a draft was found and restored.
+  Future<bool> restoreDraftIfAny() async {
+    if (isActive) return false;
+
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_draftPrefsKey);
+    if (raw == null) return false;
+
+    try {
+      final data = jsonDecode(raw) as Map<String, dynamic>;
+      final allExercises = await DatabaseHelper.instance.getExercises();
+      final exercisesById = {for (var e in allExercises) e.id: e};
+
+      final Map<Exercise, List<WorkoutSet>> restoredExercises = {};
+      for (final entry in (data['exercises'] as List<dynamic>)) {
+        final exercise = exercisesById[entry['exerciseId']];
+        if (exercise == null) continue; // exercise was deleted meanwhile
+        restoredExercises[exercise] = (entry['sets'] as List<dynamic>)
+            .map((m) => WorkoutSet.fromMap(Map<String, dynamic>.from(m)))
+            .toList();
+      }
+
+      if (restoredExercises.isEmpty) {
+        await _clearDraft();
+        return false;
+      }
+
+      workoutName = data['workoutName'] as String? ?? '';
+      notes = data['notes'] as String? ?? '';
+      routineId = data['routineId'] as int?;
+      currentWorkout = Workout(name: workoutName, startTime: DateTime.parse(data['startTime'] as String));
+      secondsElapsed = data['secondsElapsed'] as int? ?? 0;
+      secondsElapsedNotifier.value = secondsElapsed;
+      exerciseRestTimes
+        ..clear()
+        ..addAll((data['exerciseRestTimes'] as Map<String, dynamic>)
+            .map((id, seconds) => MapEntry(int.parse(id), seconds as int)));
+      workoutExercises
+        ..clear()
+        ..addAll(restoredExercises);
+      routineOriginalSets = null;
+      _routineSuperSets = {};
+      isActive = true;
+      isMinimized = true; // land on the resume banner, not straight into the screen
+      isResting = false;
+
+      _workoutTimer?.cancel();
+      _workoutTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        secondsElapsed++;
+        secondsElapsedNotifier.value = secondsElapsed;
+        if (secondsElapsed % 10 == 0) _saveDraft();
+      });
+
+      notifyListeners();
+      return true;
+    } catch (e) {
+      debugPrint('WorkoutManager: failed to restore workout draft: $e');
+      await _clearDraft();
+      return false;
+    }
+  }
+
   Future<void> startWorkout(String name, List<Exercise> initialExercises, {int? rId}) async {
     if (isActive) return;
 
@@ -108,9 +209,11 @@ class WorkoutManager extends ChangeNotifier {
     _workoutTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       secondsElapsed++;
       secondsElapsedNotifier.value = secondsElapsed;
+      if (secondsElapsed % 10 == 0) _saveDraft();
     });
 
     notifyListeners();
+    await _saveDraft();
   }
 
   Future<void> loadExercises() async {
@@ -150,6 +253,7 @@ class WorkoutManager extends ChangeNotifier {
       ];
       exerciseRestTimes[exercise.id!] = exercise.restTimeSeconds ?? exercise.getAutoRestSeconds();
       notifyListeners();
+      _saveDraft();
     }
   }
 
@@ -158,14 +262,15 @@ class WorkoutManager extends ChangeNotifier {
       bool isCardio = exercise.category?.toLowerCase() == 'cardio';
       workoutExercises[exercise]!.add(
         WorkoutSet(
-          exerciseId: exercise.id!, 
-          reps: isCardio ? 1 : 0, 
+          exerciseId: exercise.id!,
+          reps: isCardio ? 1 : 0,
           weight: 0,
           durationSeconds: isCardio ? 600 : null,
           superSetId: _routineSuperSets[exercise.id!],
         )
       );
       notifyListeners();
+      _saveDraft();
     }
   }
 
@@ -201,8 +306,9 @@ class WorkoutManager extends ChangeNotifier {
 
       // Insert them at the top of the set list
       workoutExercises[exercise]!.insertAll(0, [feeder1, feeder2, feeder3]);
-      
+
       notifyListeners();
+      _saveDraft();
     }
   }
 
@@ -210,6 +316,7 @@ class WorkoutManager extends ChangeNotifier {
     if (workoutExercises.containsKey(exercise) && workoutExercises[exercise]!.length > index) {
       workoutExercises[exercise]!.removeAt(index);
       notifyListeners();
+      _saveDraft();
     }
   }
   
@@ -278,9 +385,10 @@ class WorkoutManager extends ChangeNotifier {
         _checkPRs(exercise, currentSet);
       }
       notifyListeners();
+      _saveDraft();
     }
   }
-  
+
   void _checkPRs(Exercise exercise, WorkoutSet set) {
     if (exercise.category?.toLowerCase() == 'cardio') return;
 
@@ -357,6 +465,7 @@ class WorkoutManager extends ChangeNotifier {
     _restTimer?.cancel();
     workoutExercises.clear();
     notifyListeners();
+    _clearDraft();
   }
 
   double calculateVolume() {

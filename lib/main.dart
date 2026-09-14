@@ -16,7 +16,8 @@ void main() async {
   await initializeDateFormatting('en', null);
   await NotificationManager.instance.init();
   await TranslationManager.instance.init();
-  
+  await WorkoutManager.instance.restoreDraftIfAny();
+
   final prefs = await SharedPreferences.getInstance();
   final isFirstRun = prefs.getBool('is_first_run') ?? true;
 
