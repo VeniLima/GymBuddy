@@ -13,6 +13,7 @@ import '../models/achievement.dart';
 import '../managers/translation_manager.dart';
 import '../managers/achievement_manager.dart';
 import '../managers/csv_utils.dart';
+import '../managers/bmi_calculator.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -330,20 +331,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildBodyMetricsSection() {
     double currentWeight = _weightLogs.isNotEmpty ? (_weightLogs.first['weight'] as num).toDouble() : 0.0;
-    double bmi = 0;
-    String bmiCategory = "-";
-    Color bmiColor = Colors.grey;
     final tm = TranslationManager.instance;
     final isPt = tm.currentLanguage == 'pt';
-    
-    if (_height > 0 && currentWeight > 0) {
-      double heightMeters = _height / 100;
-      bmi = currentWeight / (heightMeters * heightMeters);
-      if (bmi < 18.5) { bmiCategory = isPt ? "Abaixo do Peso" : "Underweight"; bmiColor = Colors.blue; }
-      else if (bmi < 25) { bmiCategory = isPt ? "Peso Normal" : "Normal Weight"; bmiColor = Colors.green; }
-      else if (bmi < 30) { bmiCategory = isPt ? "Sobrepeso" : "Overweight"; bmiColor = Colors.orange; }
-      else { bmiCategory = isPt ? "Obesidade" : "Obese"; bmiColor = Colors.red; }
-    }
+    final bmiResult = BmiCalculator.calculate(heightCm: _height, weightKg: currentWeight, isPt: isPt);
+    final bmi = bmiResult.value;
+    final bmiCategory = bmiResult.category;
+    final bmiColor = bmiResult.color;
 
     return Container(
       padding: const EdgeInsets.all(20),
