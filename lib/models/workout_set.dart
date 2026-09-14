@@ -33,6 +33,48 @@ class WorkoutSet {
     this.superSetId,
   });
 
+  static const Object _unset = Object();
+
+  /// [rpe] accepts null explicitly (to clear it) — pass it or leave it out
+  /// entirely to keep the current value; every other field just keeps the
+  /// usual "omit to keep, pass a value to change it" copyWith behavior,
+  /// since none of them are ever cleared back to null in practice.
+  WorkoutSet copyWith({
+    int? id,
+    int? workoutId,
+    int? exerciseId,
+    int? reps,
+    double? weight,
+    int? durationSeconds,
+    double? distance,
+    String? setType,
+    bool? isCompleted,
+    int? previousReps,
+    double? previousWeight,
+    int? previousDurationSeconds,
+    double? previousDistance,
+    Object? rpe = _unset,
+    String? superSetId,
+  }) {
+    return WorkoutSet(
+      id: id ?? this.id,
+      workoutId: workoutId ?? this.workoutId,
+      exerciseId: exerciseId ?? this.exerciseId,
+      reps: reps ?? this.reps,
+      weight: weight ?? this.weight,
+      durationSeconds: durationSeconds ?? this.durationSeconds,
+      distance: distance ?? this.distance,
+      setType: setType ?? this.setType,
+      isCompleted: isCompleted ?? this.isCompleted,
+      previousReps: previousReps ?? this.previousReps,
+      previousWeight: previousWeight ?? this.previousWeight,
+      previousDurationSeconds: previousDurationSeconds ?? this.previousDurationSeconds,
+      previousDistance: previousDistance ?? this.previousDistance,
+      rpe: identical(rpe, _unset) ? this.rpe : rpe as double?,
+      superSetId: superSetId ?? this.superSetId,
+    );
+  }
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,

@@ -675,14 +675,11 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                                 exerciseName: exercise.name,
                               );
                             }
-                            wm.updateSet(exercise, index, WorkoutSet(
-                              id: set.id, workoutId: set.workoutId, exerciseId: set.exerciseId,
-                              reps: 1, weight: 0, 
+                            wm.updateSet(exercise, index, set.copyWith(
+                              reps: 1,
+                              weight: 0,
                               durationSeconds: newDuration,
                               distance: estimatedCal ?? set.distance,
-                              setType: set.setType, isCompleted: set.isCompleted,
-                              rpe: set.rpe,
-                              superSetId: set.superSetId,
                             ));
                           },
                         ),
@@ -706,14 +703,10 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                             contentPadding: EdgeInsets.symmetric(vertical: 4),
                           ),
                           onChanged: (val) {
-                            wm.updateSet(exercise, index, WorkoutSet(
-                              id: set.id, workoutId: set.workoutId, exerciseId: set.exerciseId,
-                              reps: 1, weight: 0, 
-                              durationSeconds: set.durationSeconds,
+                            wm.updateSet(exercise, index, set.copyWith(
+                              reps: 1,
+                              weight: 0,
                               distance: double.tryParse(val) ?? 0,
-                              setType: set.setType, isCompleted: set.isCompleted,
-                              rpe: set.rpe,
-                              superSetId: set.superSetId,
                             ));
                           },
                         ),
@@ -739,11 +732,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                             contentPadding: const EdgeInsets.symmetric(vertical: 4),
                           ),
                           onChanged: (val) {
-                            wm.updateSet(exercise, index, WorkoutSet(
-                              id: set.id, workoutId: set.workoutId, exerciseId: set.exerciseId,
-                              reps: set.reps, weight: double.tryParse(val) ?? 0, setType: set.setType, isCompleted: set.isCompleted,
-                              rpe: set.rpe,
-                              superSetId: set.superSetId,
+                            wm.updateSet(exercise, index, set.copyWith(
+                              weight: double.tryParse(val) ?? 0,
                             ));
                           },
                         ),
@@ -769,11 +759,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                             contentPadding: const EdgeInsets.symmetric(vertical: 4),
                           ),
                           onChanged: (val) {
-                            wm.updateSet(exercise, index, WorkoutSet(
-                              id: set.id, workoutId: set.workoutId, exerciseId: set.exerciseId,
-                              reps: int.tryParse(val) ?? 0, weight: set.weight, setType: set.setType, isCompleted: set.isCompleted,
-                              rpe: set.rpe,
-                              superSetId: set.superSetId,
+                            wm.updateSet(exercise, index, set.copyWith(
+                              reps: int.tryParse(val) ?? 0,
                             ));
                           },
                         ),
@@ -828,16 +815,9 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                             if (finalWeight == 0) finalWeight = prevSet.weight;
                             if (finalReps == 0) finalReps = prevSet.reps;
 
-                            wm.updateSet(exercise, index, WorkoutSet(
-                              id: set.id,
-                              workoutId: set.workoutId,
-                              exerciseId: set.exerciseId,
+                            wm.updateSet(exercise, index, set.copyWith(
                               reps: finalReps,
                               weight: finalWeight,
-                              setType: set.setType,
-                              isCompleted: set.isCompleted,
-                              rpe: set.rpe,
-                              superSetId: set.superSetId,
                             ));
                           }
                         }
@@ -1024,12 +1004,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                   subtitle: Text(tm.translate('act_type_normal_sub'), style: const TextStyle(color: Colors.grey, fontSize: 12)),
                   trailing: set.setType == 'Normal' ? const Icon(Icons.check, color: Colors.blue) : null,
                   onTap: () {
-                    wm.updateSet(exercise, index, WorkoutSet(
-                      id: set.id, workoutId: set.workoutId, exerciseId: set.exerciseId,
-                      reps: set.reps, weight: set.weight, setType: 'Normal', isCompleted: set.isCompleted,
-                      rpe: set.rpe,
-                      superSetId: set.superSetId,
-                    ));
+                    wm.updateSet(exercise, index, set.copyWith(setType: 'Normal'));
                     setState(() {});
                     Navigator.pop(context);
                   },
@@ -1049,12 +1024,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                   subtitle: Text(tm.translate('act_type_warmup_sub'), style: const TextStyle(color: Colors.grey, fontSize: 12)),
                   trailing: set.setType == 'Warmup' ? const Icon(Icons.check, color: Colors.blue) : null,
                   onTap: () {
-                    wm.updateSet(exercise, index, WorkoutSet(
-                      id: set.id, workoutId: set.workoutId, exerciseId: set.exerciseId,
-                      reps: set.reps, weight: set.weight, setType: 'Warmup', isCompleted: set.isCompleted,
-                      rpe: set.rpe,
-                      superSetId: set.superSetId,
-                    ));
+                    wm.updateSet(exercise, index, set.copyWith(setType: 'Warmup'));
                     setState(() {});
                     Navigator.pop(context);
                   },
@@ -1074,12 +1044,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                   subtitle: Text(tm.translate('act_type_failure_sub'), style: const TextStyle(color: Colors.grey, fontSize: 12)),
                   trailing: set.setType == 'Failure' ? const Icon(Icons.check, color: Colors.blue) : null,
                   onTap: () {
-                    wm.updateSet(exercise, index, WorkoutSet(
-                      id: set.id, workoutId: set.workoutId, exerciseId: set.exerciseId,
-                      reps: set.reps, weight: set.weight, setType: 'Failure', isCompleted: set.isCompleted,
-                      rpe: set.rpe,
-                      superSetId: set.superSetId,
-                    ));
+                    wm.updateSet(exercise, index, set.copyWith(setType: 'Failure'));
                     setState(() {});
                     Navigator.pop(context);
                   },
@@ -1099,12 +1064,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                   subtitle: Text(tm.translate('act_type_drop_sub'), style: const TextStyle(color: Colors.grey, fontSize: 12)),
                   trailing: set.setType == 'Drop' ? const Icon(Icons.check, color: Colors.blue) : null,
                   onTap: () {
-                    wm.updateSet(exercise, index, WorkoutSet(
-                      id: set.id, workoutId: set.workoutId, exerciseId: set.exerciseId,
-                      reps: set.reps, weight: set.weight, setType: 'Drop', isCompleted: set.isCompleted,
-                      rpe: set.rpe,
-                      superSetId: set.superSetId,
-                    ));
+                    wm.updateSet(exercise, index, set.copyWith(setType: 'Drop'));
                     setState(() {});
                     Navigator.pop(context);
                   },
@@ -1146,12 +1106,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                     bool isSelected = set.rpe == val;
                     return InkWell(
                       onTap: () {
-                        wm.updateSet(exercise, index, WorkoutSet(
-                          id: set.id, workoutId: set.workoutId, exerciseId: set.exerciseId,
-                          reps: set.reps, weight: set.weight, setType: set.setType, isCompleted: set.isCompleted,
-                          rpe: val,
-                          superSetId: set.superSetId,
-                        ));
+                        wm.updateSet(exercise, index, set.copyWith(rpe: val));
                         setState(() {});
                         Navigator.pop(context);
                       },
@@ -1179,12 +1134,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                 const SizedBox(height: 16),
                 TextButton(
                   onPressed: () {
-                    wm.updateSet(exercise, index, WorkoutSet(
-                      id: set.id, workoutId: set.workoutId, exerciseId: set.exerciseId,
-                      reps: set.reps, weight: set.weight, setType: set.setType, isCompleted: set.isCompleted,
-                      rpe: null,
-                      superSetId: set.superSetId,
-                    ));
+                    wm.updateSet(exercise, index, set.copyWith(rpe: null));
                     setState(() {});
                     Navigator.pop(context);
                   },
