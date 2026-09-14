@@ -48,3 +48,8 @@ app.*.map.json
 docs/
 screen.png
 GEMINI.md
+
+# Claude Code (ferramenta local, nao faz parte do app)
+.claude/
+.agents/
+skills-lock.json
