@@ -104,7 +104,11 @@ class ExerciseLibraryDetailScreen extends StatelessWidget {
         backgroundColor: Colors.black,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        // Bottom inset adds the device's safe-area (gesture nav bar) on top
+        // of the usual 16px padding, so the import/history button at the
+        // bottom doesn't end up under the system navigation area (same bug
+        // as create_routine_screen.dart, reported on a Galaxy A14).
+        padding: EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 16.0 + MediaQuery.of(context).padding.bottom),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

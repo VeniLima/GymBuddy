@@ -140,7 +140,11 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Padding(
-              padding: const EdgeInsets.all(16.0),
+              // Bottom inset adds the device's safe-area (gesture nav bar)
+              // on top of the usual 16px padding, so "Iniciar Treino"
+              // doesn't end up under the system navigation area (same bug
+              // as create_routine_screen.dart, reported on a Galaxy A14).
+              padding: EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 16.0 + MediaQuery.of(context).padding.bottom),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

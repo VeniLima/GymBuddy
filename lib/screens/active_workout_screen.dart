@@ -578,7 +578,13 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                 // columns (weight/reps/RPE/check) actually line up with
                 // their headers instead of drifting ~16px to the right.
                 const SizedBox(width: 16),
-                SizedBox(width: 30, child: Text(tm.translate('act_set'), style: const TextStyle(color: Colors.grey, fontSize: 12))),
+                // 38, not 30: "SÉRIE" (pt) wraps into two lines ("SÉRI"/"E")
+                // in a 30px-wide box on real devices, reading as if it
+                // spills into the ANTERIOR column next to it (reported on a
+                // Galaxy A14). "SET" (en) always fit; must match the badge
+                // SizedBox width below so the columns stay aligned.
+                SizedBox(width: 38, child: Text(tm.translate('act_set'), style: const TextStyle(color: Colors.grey, fontSize: 12), softWrap: false, overflow: TextOverflow.visible)),
+                const SizedBox(width: 10),
                 Expanded(child: Text(tm.translate('act_previous'), style: const TextStyle(color: Colors.grey, fontSize: 12))),
                 SizedBox(width: 60, child: Text(isCardio ? tm.translate('act_time') : tm.translate('act_weight'), style: const TextStyle(color: Colors.grey, fontSize: 12), textAlign: TextAlign.center)),
                 const SizedBox(width: 12),
@@ -640,7 +646,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                   else
                     const SizedBox(width: 16),
                   SizedBox(
-                    width: 30,
+                    width: 38, // matches the SÉRIE header's width above
                     height: 32,
                     child: Semantics(
                       button: true,
@@ -654,6 +660,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                       ),
                     ),
                   ),
+                  const SizedBox(width: 10),
                   Expanded(child: Text(previousText, style: const TextStyle(color: Colors.grey, fontSize: 13))),
                   if (isCardio) ...[
                     // Cardio Time Input
@@ -932,11 +939,16 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
     }
 
     Widget badge = Container(
-      width: 24,
-      height: 24,
+      // 32, not 24: filling more of the 38dp column it sits in (like the
+      // reference app the user pointed to) instead of a small circle with a
+      // lot of empty padding around it.
+      width: 32,
+      height: 32,
       decoration: BoxDecoration(
         color: bgColor,
-        shape: BoxShape.circle,
+        // Rounded square instead of a circle, matching the KG/REPS input
+        // boxes' own BorderRadius.circular(4) right next to it.
+        borderRadius: BorderRadius.circular(4),
         boxShadow: isCompleted || set.setType != 'Normal'
             ? [BoxShadow(color: bgColor.withOpacity(0.3), blurRadius: 4, offset: const Offset(0, 1))]
             : null,
@@ -947,7 +959,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
         style: TextStyle(
           color: textColor,
           fontWeight: FontWeight.bold,
-          fontSize: 12,
+          fontSize: 13,
         ),
       ),
     );
