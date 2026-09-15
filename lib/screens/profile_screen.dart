@@ -355,9 +355,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                isPt ? 'Métricas Corporais' : 'Body Metrics',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+              Expanded(
+                child: Text(
+                  isPt ? 'Métricas Corporais' : 'Body Metrics',
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
               Row(
                 children: [

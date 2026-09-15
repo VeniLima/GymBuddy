@@ -186,7 +186,10 @@ class _CreateRoutineScreenState extends State<CreateRoutineScreen> {
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        // Bottom inset adds the device's safe-area (gesture nav bar) on top
+        // of the usual 16px padding, so "Adicionar Exercício" doesn't end up
+        // rendered under the system navigation area (reported on a Galaxy A14).
+        padding: EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 16.0 + MediaQuery.of(context).padding.bottom),
         child: Column(
           children: [
             TextField(
